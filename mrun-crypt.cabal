@@ -59,6 +59,7 @@ executable mcrypt
   build-depends:
       base >=4.7 && <5
     , mrun-crypt
+    , optparse-applicative
   default-language: Haskell2010
 
 executable mkey
@@ -73,6 +74,7 @@ executable mkey
   build-depends:
       base >=4.7 && <5
     , mrun-crypt
+    , optparse-applicative
   default-language: Haskell2010
 
 test-suite mrun-crypt-test

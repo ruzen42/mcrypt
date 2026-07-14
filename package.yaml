@@ -47,6 +47,7 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - mrun-crypt
+    - optparse-applicative
   mkey:
     main:                Main.hs
     source-dirs:         mkey 
@@ -56,6 +57,7 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - mrun-crypt
+    - optparse-applicative
 
 tests:
   mrun-crypt-test:
