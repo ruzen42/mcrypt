@@ -7,6 +7,7 @@ cabal-version: 2.2
 name:           mrun-crypt
 version:        0.1.0.0
 description:    Please see the README on GitHub at <https://github.com/ruzen42/mrun-crypt#readme>
+category:       Crypto
 homepage:       https://github.com/ruzen42/mrun-crypt#readme
 bug-reports:    https://github.com/ruzen42/mrun-crypt/issues
 author:         Jaroslav
@@ -25,7 +26,11 @@ source-repository head
 
 library
   exposed-modules:
-      Lib
+      Crypt
+      Crypt.Decrypt
+      Crypt.Encrypt
+      Crypt.Gen
+      Crypt.IO
   other-modules:
       Paths_mrun_crypt
   autogen-modules:
@@ -35,16 +40,35 @@ library
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
       base >=4.7 && <5
+    , binary
+    , bytestring
+    , directory
+    , filepath
+    , random
   default-language: Haskell2010
 
-executable mrun-crypt-exe
+executable mcrypt
   main-is: Main.hs
   other-modules:
       Paths_mrun_crypt
   autogen-modules:
       Paths_mrun_crypt
   hs-source-dirs:
-      app
+      mcrypt
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , mrun-crypt
+  default-language: Haskell2010
+
+executable mkey
+  main-is: Main.hs
+  other-modules:
+      Paths_mrun_crypt
+  autogen-modules:
+      Paths_mrun_crypt
+  hs-source-dirs:
+      mkey
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5

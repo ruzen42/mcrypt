@@ -1,11 +1,11 @@
-module Crypt.Gen (generateKey) where
+module Crypt.Gen (newIOKeys, newKeys, generateKeys) where
 
 import Crypt
 import System.Random 
 
 -- in future, add polymorchic RandomGen instead of StdGen
 
-randomInteger :: StdGen -> Integer -> (Integer, StdGen)
+randomInteger :: StdGen -> Integer -> Integer -> (Integer, StdGen)
 randomInteger gen low high = 
   let 
     (x, gen') = random gen :: (Integer, StdGen)
@@ -58,16 +58,16 @@ newKeys gen =
     high = 92992019203922
     ((p, q, _), _) = generateThreePrimes gen low high
   in 
-    generateKey p q 65537
+    generateKeys p q 65537
 
-generateKey :: Integer -> Integer -> Integer -> (PublicKey, PrivateKey)
-generateKey p q e = 
+generateKeys :: Integer -> Integer -> Integer -> (PublicKey, PrivateKey)
+generateKeys p q e = 
   let 
     n = p * q
     phi = (p - 1) * (q - 1)
     d = modInverse e phi
   in 
-    ((e,n),(d,n))
+    (PublicKey{publicE=e,publicN=n},PrivateKey{privateD=d,privateN=n})
   where
     egcd :: Integer -> Integer -> (Integer, Integer, Integer)
     egcd a 0 = (a, 1, 0)
