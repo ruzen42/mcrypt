@@ -2,7 +2,7 @@ module Main (main) where
 
 import Crypt.Gen (newIOKeys)
 import Options.Applicative 
-import Crypt.IO (saveKeys, getAll, getPrivate, getPublic)
+import Crypt.IO (saveKeys, getAll, getPublic, removeKeys)
 
 data Command
     = New String
@@ -12,44 +12,36 @@ data Command
 
 main :: IO ()
 main = do
-    action <- execParser optsInfo
+    act <- execParser optsInfo
 
-    case action of
+    case act of
         New name -> do
             (pub, prv) <- newIOKeys
             saveKeys pub prv name
 
-            putStrLn $ "Created key \"" ++ name ++ "\""
+            putStrLn $ "created key \"" ++ name ++ "\""
 
         Get name -> do
             mpub <- getPublic name
-            mprv <- getPrivate name
 
-            case (mpub, mprv) of
-                (Just pub, Just prv) -> do
-                    putStrLn "Public:"
+            case mpub of
+                Just pub -> do
                     print pub
-                    putStrLn "Private:"
-                    print prv
-
                 _ ->
-                    putStrLn "Key not found."
+                    putStrLn "key not found... :("
 
         List -> do
             keys <- getAll
             mapM_ putStrLn keys
 
-        Delete name -> do
-            putStrLn "Not implemented."
-
-
+        Delete name -> removeKeys name 
 
 optsInfo :: ParserInfo Command
 optsInfo =
     info
         (commandParser <**> helper)
         ( fullDesc
-       <> progDesc "Simple cryptokeys generator"
+       <> progDesc "simple cryptokeys generator"
         )
 
 commandParser :: Parser Command

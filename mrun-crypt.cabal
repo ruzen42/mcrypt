@@ -1,4 +1,4 @@
-cabal-version: 2.2
+cabal-version: 1.12
 
 -- This file has been generated from package.yaml by hpack version 0.39.1.
 --
@@ -13,8 +13,7 @@ bug-reports:    https://github.com/ruzen42/mrun-crypt/issues
 author:         Jaroslav
 maintainer:     ruzen@tuta.io
 copyright:      Jaroslav Mihajlenko
-license:        BSD-3-Clause
-license-file:   LICENSE
+license:        MIT
 build-type:     Simple
 extra-source-files:
     README.md
@@ -33,8 +32,6 @@ library
       Crypt.IO
   other-modules:
       Paths_mrun_crypt
-  autogen-modules:
-      Paths_mrun_crypt
   hs-source-dirs:
       src
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
@@ -51,8 +48,6 @@ executable mcrypt
   main-is: Main.hs
   other-modules:
       Paths_mrun_crypt
-  autogen-modules:
-      Paths_mrun_crypt
   hs-source-dirs:
       mcrypt
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
@@ -65,8 +60,6 @@ executable mcrypt
 executable mkey
   main-is: Main.hs
   other-modules:
-      Paths_mrun_crypt
-  autogen-modules:
       Paths_mrun_crypt
   hs-source-dirs:
       mkey
@@ -81,8 +74,6 @@ test-suite mrun-crypt-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
-      Paths_mrun_crypt
-  autogen-modules:
       Paths_mrun_crypt
   hs-source-dirs:
       test

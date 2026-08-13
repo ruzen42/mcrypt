@@ -8,17 +8,25 @@ import GHC.Generics (Generic)
 import Data.Binary (Binary) 
 
 programVer :: Int 
-programVer = 1
+programVer = 2
 
 data PublicKey  = PublicKey 
   { publicE :: Integer
   , publicN :: Integer
-  } deriving Show
+  } 
+
+instance Show PublicKey where
+  show key = show (publicE key) ++ " " ++ show (publicN key)
 
 data PrivateKey = PrivateKey 
   { privateD :: Integer
   , privateN :: Integer
-  } deriving Show
+  } 
+
+instance Show PrivateKey where
+  show key = show (privateD key) ++ " " ++ show (privateN key)
+
+
 
 data IOKey = IOKey 
   { version :: Int 
@@ -59,12 +67,12 @@ powMod base exp modulus = go 1 (base `mod` modulus) exp
 
 io2public :: IOKey -> Maybe PublicKey
 io2public io = 
-  if kType io
+  if not (kType io)
     then Just $ PublicKey (value1 io) (value2 io)
     else Nothing
 
 io2private :: IOKey -> Maybe PrivateKey
 io2private io = 
-  if not (kType io)
+  if kType io
     then Just $ PrivateKey (value1 io) (value2 io)
     else Nothing
