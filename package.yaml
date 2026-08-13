@@ -1,10 +1,8 @@
 name:                mrun-crypt
-version:             0.1.0.0
+version:             0.1.1.0
 github:              "ruzen42/mrun-crypt"
 license:             MIT 
-author:              "Jaroslav"
 maintainer:          "ruzen@tuta.io"
-copyright:           "Jaroslav Mihajlenko"
 
 extra-source-files:
 - README.md
