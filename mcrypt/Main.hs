@@ -1,7 +1,7 @@
 module Main (main) where
 
-import Crypt.PQ.IO (getPQPrivate, getPQPublic, savePQKeys)
-import Crypt.Sig (checkFile, loadSigFile, signFile)
+import Crypt.PQ.IO (getPQPrivate, getPQPublic)
+import Crypt.Sig (checkFile, loadSigFile, signFile, saveSigFile)
 import Options.Applicative
 import System.Exit (exitFailure)
 import System.IO (hPutStrLn, stderr)
@@ -18,7 +18,7 @@ main = do
     Check file key -> doCheck file key
 
 defaultKeyName :: Maybe String -> String
-defaultKeyName = maybe "default" id
+defaultKeyName = maybe "main" id
 
 doSign :: FilePath -> Maybe String -> IO ()
 doSign file key = do

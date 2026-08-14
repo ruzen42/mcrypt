@@ -2,11 +2,13 @@ module Crypt.PQ.IO
   ( savePQKeys
   , getPQPublic
   , getPQPrivate
+  , getAllKeys
+  , keyExist
   ) where
 
 import Crypt.PQ (PQPrivateKey (..), PQPublicKey (..))
 import qualified Data.ByteString as BS
-import System.Directory (createDirectoryIfMissing, getHomeDirectory)
+import System.Directory (createDirectoryIfMissing, getHomeDirectory, listDirectory, doesDirectoryExist)
 import System.FilePath ((</>))
 
 mcrypt :: String
@@ -18,6 +20,17 @@ keyDir name = do
   let dir = home </> mcrypt </> name
   createDirectoryIfMissing True dir
   pure dir
+
+getAllKeys :: IO [FilePath]
+getAllKeys = do 
+  home <- getHomeDirectory
+  let dir = home </> mcrypt 
+  listDirectory dir 
+
+keyExist :: FilePath -> IO Bool
+keyExist name = do
+  dir <- keyDir name
+  doesDirectoryExist dir
 
 savePQKeys :: PQPublicKey -> PQPrivateKey -> FilePath -> IO ()
 savePQKeys (PQPublicKey pub) (PQPrivateKey priv) name = do

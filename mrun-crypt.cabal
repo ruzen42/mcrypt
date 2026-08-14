@@ -12,6 +12,7 @@ homepage:       https://github.com/ruzen42/mcrypt#readme
 bug-reports:    https://github.com/ruzen42/mcrypt/issues
 maintainer:     ruzen@tuta.io
 license:        MIT
+license-file:   LICENSE
 build-type:     Simple
 extra-source-files:
     README.md

@@ -1,8 +1,9 @@
 module Main (main) where
 
-import Crypt.Gen (newIOKeys)
 import Options.Applicative 
-import Crypt.IO (saveKeys, getAll, getPublic, removeKeys)
+import Crypt.PQ.IO (savePQKeys, getPQPublic, getAllKeys, keyExist)
+import Crypt.IO (removeKeys)
+import Crypt.PQ (pqKeypair)
 
 data Command
     = New String
@@ -16,22 +17,21 @@ main = do
 
     case act of
         New name -> do
-            (pub, prv) <- newIOKeys
-            saveKeys pub prv name
+            (pub, prv) <- pqKeypair 
+            savePQKeys pub prv name
 
             putStrLn $ "created key \"" ++ name ++ "\""
 
         Get name -> do
-            mpub <- getPublic name
+            exist <- keyExist name 
+            mpub <- getPQPublic name
 
-            case mpub of
-                Just pub -> do
-                    print pub
-                _ ->
-                    putStrLn "key not found... :("
+            case exist of
+                True -> print mpub
+                _    -> putStrLn "key not found... :("
 
         List -> do
-            keys <- getAll
+            keys <- getAllKeys
             mapM_ putStrLn keys
 
         Delete name -> removeKeys name 
@@ -85,3 +85,4 @@ deleteParser =
        <> short 'd' 
        <> help "Delete a key"
         )
+
