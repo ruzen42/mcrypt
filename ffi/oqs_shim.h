@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define MCRYPT_SIG_ALG "Dilithium3"
+#define MCRYPT_SIG_ALG "OQS_SIG_alg_ml_dsa_65"
 
 size_t mcrypt_sig_public_key_len(void);
 size_t mcrypt_sig_secret_key_len(void);
