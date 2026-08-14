@@ -55,8 +55,9 @@ newParser :: Parser Command
 newParser =
     New <$> strOption
         ( long "new"
+       <> short 'n' 
        <> metavar "NAME"
-       <> help "Generate a new key pair"
+       <> help "generate a new key pair"
         )
 
 getParser :: Parser Command
@@ -64,14 +65,16 @@ getParser =
     Get <$> strOption
         ( long "get"
        <> metavar "NAME"
-       <> help "Load a key"
+       <> short 'g' 
+       <> help "get public key"
         )
 
 listParser :: Parser Command
 listParser =
     flag' List
         ( long "list"
-       <> help "List keys"
+       <> short 'l' 
+       <> help "list keys"
         )
 
 deleteParser :: Parser Command
@@ -79,5 +82,6 @@ deleteParser =
     Delete <$> strOption
         ( long "delete"
        <> metavar "NAME"
+       <> short 'd' 
        <> help "Delete a key"
         )

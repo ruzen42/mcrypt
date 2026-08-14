@@ -20,6 +20,10 @@
 snapshot:
   url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/24/50.yaml
 
+
+nix:
+  enable: true
+  packages: [liboqs, pkg-config]
 # User packages to be built.
 # Various formats can be used as shown in the example below.
 #
@@ -35,7 +39,11 @@ packages:
 # These entries can reference officially published versions as well as
 # forks / in-progress versions pinned to a git hash. For example:
 #
-# extra-deps:
+extra-deps:
+- blake3-0.3.1@sha256:d514a6c7ea1da9245311c5f91113453f14e2dfa31f1e8aff35481cb6acab4d46,2850
+- ram-0.22.0@sha256:f6ce64a025929eb6ce42deeb80d072960a9ea2d83b9b9b28de668cc2b623127c,2814
+
+
 # - acme-missiles-0.3
 # - git: https://github.com/commercialhaskell/stack.git
 #   commit: e7b331f14bcffb8367cd58fbfc8b40ec7642100a

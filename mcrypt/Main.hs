@@ -1,86 +1,86 @@
 module Main (main) where
 
-import Options.Applicative 
-import Crypt.IO (getPublic, getPrivate)
+import Crypt.PQ (pqKeypair)
+import Crypt.PQ.IO (getPQPrivate, getPQPublic, savePQKeys)
+import Crypt.Sig (checkFile, loadSigFile, saveSigFile, signFile)
+import Options.Applicative
+import System.Exit (exitFailure)
+import System.IO (hPutStrLn, stderr)
 
 data Command
-    = Crypt String (Maybe String)
-    | Decrypt String (Maybe String)
-    | Sign String (Maybe String)
-    | Check String (Maybe String)
-
-defaultKeyName :: String
-defaultKeyName = "main"
+  = Sign String (Maybe String)
+  | Check String (Maybe String)
 
 main :: IO ()
 main = do
-    act <- execParser optsInfo
+  act <- execParser optsInfo
+  case act of
+    Sign file key -> doSign file key
+    Check file key -> doCheck file key
 
-    case act of
-        Crypt file key   -> error "not implemented"
-        Decrypt file key -> error "not implemented"
-        Sign file key    -> error "not implemented"
-        Check file key   -> error "not implemented"
+defaultKeyName :: Maybe String -> String
+defaultKeyName = maybe "default" id
+
+doSign :: FilePath -> Maybe String -> IO ()
+doSign file key = do
+  let name = defaultKeyName key
+  priv <- getPQPrivate name
+  sf <- signFile priv file
+  let sigPath = file ++ ".sig"
+  saveSigFile sigPath sf
+  putStrLn $ "Signed " ++ file ++ " -> " ++ sigPath
+
+doCheck :: FilePath -> Maybe String -> IO ()
+doCheck file key = do
+  let name = defaultKeyName key
+  pub <- getPQPublic name
+  sf <- loadSigFile (file ++ ".sig")
+  ok <- checkFile pub file sf
+  if ok
+    then putStrLn "OK: signature valid"
+    else do
+      hPutStrLn stderr "FAIL: signature invalid or file modified"
+      exitFailure
 
 optsInfo :: ParserInfo Command
 optsInfo =
-    info
-        (commandParser <**> helper)
-        ( fullDesc
-       <> progDesc "crypt and sign your files"
-        )
+  info
+    (commandParser <**> helper)
+    ( fullDesc
+        <> progDesc "sign and verify files with BLAKE3 + Dilithium3 (post-quantum)"
+    )
 
 keyOpt :: Parser (Maybe String)
-keyOpt = optional $ strOption
-    ( long "key"
-   <> short 'k'
-   <> metavar "KEY"
-   <> help "optional encryption key" )
+keyOpt =
+  optional $
+    strOption
+      ( long "key"
+          <> short 'k'
+          <> metavar "KEY"
+          <> help "name of the keyset to use (default: \"default\")"
+      )
 
 commandParser :: Parser Command
-commandParser = 
-       cryptParser
-    <|> decryptParser
-    <|> signParser
-    <|> checkParser
-
-cryptParser :: Parser Command
-cryptParser =
-    Crypt <$> strOption
-        ( long "crypt"
-       <> short 'c'
-       <> metavar "FILE"
-       <> help "crypt your file"
-        )
-    <*> keyOpt
-
-decryptParser :: Parser Command
-decryptParser =
-    Decrypt <$> strOption
-        ( long "decrypt"
-       <> short 'd'
-       <> metavar "FILE"
-       <> help "decrypt your file"
-        )
-    <*> keyOpt
+commandParser = signParser <|> checkParser
 
 signParser :: Parser Command
 signParser =
-    Sign <$> strOption
-        ( long "sign"
-       <> short 's'
-       <> metavar "FILE"
-       <> help "sign your file"
-        )
+  Sign
+    <$> strOption
+      ( long "sign"
+          <> short 's'
+          <> metavar "FILE"
+          <> help "sign your file"
+      )
     <*> keyOpt
 
 checkParser :: Parser Command
 checkParser =
-    Check <$> strOption
-        ( long "check"
-       <> short 'C'  
-       <> metavar "FILE"
-       <> help "check signature"
-        )
+  Check
+    <$> strOption
+      ( long "check"
+          <> short 'C'
+          <> metavar "FILE"
+          <> help "check signature"
+      )
     <*> keyOpt
-

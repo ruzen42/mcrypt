@@ -5,11 +5,11 @@ cabal-version: 1.12
 -- see: https://github.com/sol/hpack
 
 name:           mrun-crypt
-version:        0.1.1.0
-description:    Please see the README on GitHub at <https://github.com/ruzen42/mrun-crypt#readme>
-category:       Crypto
-homepage:       https://github.com/ruzen42/mrun-crypt#readme
-bug-reports:    https://github.com/ruzen42/mrun-crypt/issues
+version:        0.2.1
+description:    Please see the README on GitHub at <https://github.com/ruzen42/mcrypt#readme>
+category:       Cryptography
+homepage:       https://github.com/ruzen42/mcrypt#readme
+bug-reports:    https://github.com/ruzen42/mcrypt/issues
 maintainer:     ruzen@tuta.io
 license:        MIT
 build-type:     Simple
@@ -19,27 +19,38 @@ extra-source-files:
 
 source-repository head
   type: git
-  location: https://github.com/ruzen42/mrun-crypt
+  location: https://github.com/ruzen42/mcrypt
 
 library
   exposed-modules:
       Crypt
       Crypt.Decrypt
       Crypt.Encrypt
-      Crypt.Error
       Crypt.Gen
+      Crypt.Hash
       Crypt.IO
+      Crypt.PQ
+      Crypt.PQ.IO
+      Crypt.Sig
   other-modules:
       Paths_mrun_crypt
   hs-source-dirs:
       src
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
+  include-dirs:
+      ffi
+  c-sources:
+      ffi/oqs_shim.c
+  extra-libraries:
+      oqs
   build-depends:
       base >=4.7 && <5
     , binary
+    , blake3
     , bytestring
     , directory
     , filepath
+    , memory
     , random
   default-language: Haskell2010
 
