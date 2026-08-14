@@ -1,8 +1,7 @@
 module Main (main) where
 
-import Crypt.Gen (newIOKeys)
 import Options.Applicative 
-import Crypt.IO (saveKeys, getAll, getPublic, removeKeys)
+import Crypt.IO (getPublic, getPrivate)
 
 data Command
     = Crypt String (Maybe String)
@@ -33,7 +32,7 @@ keyOpt = optional $ strOption
     ( long "key"
    <> short 'k'
    <> metavar "KEY"
-   <> help "Optional encryption key" )
+   <> help "optional encryption key" )
 
 commandParser :: Parser Command
 commandParser = 

@@ -26,6 +26,7 @@ library
       Crypt
       Crypt.Decrypt
       Crypt.Encrypt
+      Crypt.Error
       Crypt.Gen
       Crypt.IO
   other-modules:
