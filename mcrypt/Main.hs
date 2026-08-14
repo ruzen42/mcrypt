@@ -9,6 +9,9 @@ data Command
     | Sign String (Maybe String)
     | Check String (Maybe String)
 
+defaultKeyName :: String
+defaultKeyName = "main"
+
 main :: IO ()
 main = do
     act <- execParser optsInfo

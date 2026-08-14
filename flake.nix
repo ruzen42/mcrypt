@@ -11,13 +11,16 @@
       in
       {
         devShell = pkgs.mkShell {
-          buildInputs = [
-            pkgs.haskell.compiler.native-bignum.ghc9103
-            pkgs.cabal-install
-            pkgs.stack
-            pkgs.git
-            pkgs.zlib
-            pkgs.pkg-config
+          buildInputs = with pkgs; [
+            haskell.compiler.native-bignum.ghc9103
+            cabal-install
+            stack
+            git
+            zlib
+            pkg-config
+            gcc
+            gnumake
+            liboqs
           ];
         };
 
