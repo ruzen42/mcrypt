@@ -8,7 +8,7 @@ module Crypt.Sig
   , loadSigFile
   ) where
 
-import Crypt.Hash (Digest, hashFile)
+import Crypt.Hash (hashFile)
 import Crypt.PQ
   ( PQPrivateKey
   , PQPublicKey

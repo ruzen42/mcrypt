@@ -19,8 +19,7 @@ import qualified Data.ByteString.Unsafe as BSU
 import Foreign
 import Foreign.C.Types
  
--- name of the fixed signature algorithm (informational / for
--- inclusion in signature file headers)
+-- name of the fixed signature algorithm (informational  for inclusion in signature file headers)
 pqAlgorithmName :: String
 pqAlgorithmName = "Dilithium3"
  
@@ -92,8 +91,7 @@ pqKeypair = do
       sec <- BS.packCStringLen (castPtr secPtr, secLen)
       pure (PQPublicKey pub, PQPrivateKey sec)
  
--- sign a message (in practice: a BLAKE3 digest, please see 'Crypt.Hash')
--- with a D3 private key
+-- sign a message (in practice: a BLAKE3 digest, please see 'Crypt.Hash' modull) with a D3 private key
 pqSign :: PQPrivateKey -> BS.ByteString -> IO BS.ByteString
 pqSign (PQPrivateKey sec) msg = do
   maxSigLen <- pqMaxSignatureLen

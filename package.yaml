@@ -35,7 +35,7 @@ library:
   - filepath
   - directory
   - blake3
-  - memory
+  - ram
   c-sources:
     - ffi/oqs_shim.c
   include-dirs:
