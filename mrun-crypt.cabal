@@ -5,14 +5,12 @@ cabal-version: 1.12
 -- see: https://github.com/sol/hpack
 
 name:           mrun-crypt
-version:        0.1.0.0
+version:        0.1.1.0
 description:    Please see the README on GitHub at <https://github.com/ruzen42/mrun-crypt#readme>
 category:       Crypto
 homepage:       https://github.com/ruzen42/mrun-crypt#readme
 bug-reports:    https://github.com/ruzen42/mrun-crypt/issues
-author:         Jaroslav
 maintainer:     ruzen@tuta.io
-copyright:      Jaroslav Mihajlenko
 license:        MIT
 build-type:     Simple
 extra-source-files:
