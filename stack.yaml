@@ -20,9 +20,8 @@
 snapshot:
   url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/24/50.yaml
 
-
 nix:
-  enable: true
+  enable: false #true for freebsd
   packages: [liboqs, pkg-config]
 # User packages to be built.
 # Various formats can be used as shown in the example below.

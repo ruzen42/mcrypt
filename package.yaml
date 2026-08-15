@@ -37,12 +37,11 @@ library:
   - blake3
   - ram
   c-sources:
-    - ffi/oqs_shim.c
+  - cbits/oqs_shim.c
   include-dirs:
-    - ffi 
+  - cbits 
   extra-libraries:
-    - oqs 
-
+  - oqs 
 
 executables:
   mcrypt:
