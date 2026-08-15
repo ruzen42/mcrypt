@@ -1,32 +1,32 @@
-# mrun-crypt
+# mcrypt
 
-A minimal RSA implementation written in Haskell.
+A simple liboqs + BLAKE3 keys manager implementation written in Haskell.
 
 > **Warning**
 > This project is intended for learning and experimentation. It is **not** suitable for protecting real-world data.
 
 ## Features
 
-- Pure Haskell implementation
-- RSA key generation
+- Dilithium3 key generation
 - Public/private key encryption primitives
 - Binary key serialization
 - Stores keys in `~/.mcrypt`
-- No external cryptography libraries
 
 ## Installation
 
 ```bash
-git clone https://github.com/ruzen42/mcrypto.git
+git clone https://github.com/ruzen42/mcrypt.git
 cd mcrypto
 
-cabal build # or stack
+cabal build
+cabal install
 ```
 
 or
 
 ```bash
 stack build
+stack install
 ```
 
 ## Usage
@@ -37,7 +37,7 @@ Generate a new key pair:
 mkey --new main
 ```
 
-Show an existing key:
+Show an existing public key:
 
 ```bash
 mkey --get main
@@ -72,55 +72,19 @@ Generated keys are stored inside the user's home directory.
     └── private
 ```
 
-## Library Usage
-
-```haskell
-import Crypt.Gen
-import Crypt.Encrypt
-import Crypt.Decrypt
-
-main :: IO ()
-main = do
-    (pub, prv) <- newIOKeys
-
-    let
-        message = 42
-        cipher  = encrypt pub message
-        plain   = decrypt prv cipher
-
-    print cipher
-    print plain
-```
-
-## Project Structure
-
-```text
-src/
-├── Crypt.hs
-├── Crypt/
-│   ├── Gen.hs
-│   ├── Encrypt.hs
-│   ├── Decrypt.hs
-│   └── IO.hs
-```
-
 ## Current Implementation
 
-- Fast modular exponentiation
-- Extended Euclidean algorithm
-- RSA key generation
+- Dilithium3 + BLAKE3 file signing
 - Binary key storage
-- Prime generation using trial division
+- post kvantum safe
 
 ## Planned
 
-- [ ] Miller–Rabin primality test
-- [ ] 256/512/1024-bit key generation
 - [ ] OAEP padding
 - [ ] Digital signatures
 - [ ] PEM export/import
 - [ ] Fingerprints
-- [ ] RandomGen polymorphism
+- [ ] TPM2 support  
 - [ ] Better CLI
 - [ ] Benchmarks
 - [ ] Tests
@@ -128,13 +92,6 @@ src/
 ## Security Notice
 
 This implementation is educational.
-
-It currently:
-
-- uses trial-division primality testing;
-- does not implement OAEP or PKCS#1 padding;
-- stores private keys unencrypted;
-- has not been audited.
 
 Do **not** use this project to protect sensitive information.
 
