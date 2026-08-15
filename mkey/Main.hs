@@ -1,8 +1,7 @@
 module Main (main) where
 
 import Options.Applicative 
-import Crypt.PQ.IO (savePQKeys, getPQPublic, getAllKeys, keyExist)
-import Crypt.IO (removeKeys)
+import Crypt.PQ.IO (savePQKeys, getPQPublic, getAllKeys, keyExist, removeKeys)
 import Crypt.PQ (pqKeypair)
 
 data Command

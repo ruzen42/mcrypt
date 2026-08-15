@@ -4,11 +4,17 @@ module Crypt.PQ.IO
   , getPQPrivate
   , getAllKeys
   , keyExist
+  , removeKeys
   ) where
 
 import Crypt.PQ (PQPrivateKey (..), PQPublicKey (..))
 import qualified Data.ByteString as BS
-import System.Directory (createDirectoryIfMissing, getHomeDirectory, listDirectory, doesDirectoryExist)
+import System.Directory (createDirectoryIfMissing
+                        , getHomeDirectory
+                        , listDirectory
+                        , doesDirectoryExist
+                        , removeDirectoryRecursive
+                        )
 import System.FilePath ((</>))
 
 mcrypt :: String
@@ -47,3 +53,9 @@ getPQPrivate :: FilePath -> IO PQPrivateKey
 getPQPrivate name = do
   home <- getHomeDirectory
   PQPrivateKey <$> BS.readFile (home </> mcrypt </> name </> "private")
+
+removeKeys :: FilePath -> IO ()
+removeKeys key = do 
+  home <- getHomeDirectory
+  let dir = home </> mcrypt </> key
+  removeDirectoryRecursive dir

@@ -24,13 +24,8 @@ source-repository head
 
 library
   exposed-modules:
-      Crypt
-      Crypt.Decrypt
-      Crypt.Encrypt
-      Crypt.Gen
-      Crypt.Hash
-      Crypt.IO
       Crypt.PQ
+      Crypt.Hash
       Crypt.PQ.IO
       Crypt.Sig
   other-modules:
