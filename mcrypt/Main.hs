@@ -5,6 +5,7 @@ import Crypt.Sig (checkFile, loadSigFile, signFile, saveSigFile)
 import Options.Applicative
 import System.Exit (exitFailure)
 import System.IO (hPutStrLn, stderr)
+import Control.Monad (unless)
 
 data Command
   = Sign String (Maybe String)
@@ -24,32 +25,32 @@ doSign :: FilePath -> Maybe String -> IO ()
 doSign file key = do
   let name = defaultKeyName key
   exist <- keyExist name
-  if not exist then do
-    hPutStrLn stderr "ERROR: please create " ++ name ++ " key before using it" 
+  unless exist $ do
+    hPutStrLn stderr $ "ERROR: please create " ++ name ++ " key before using it"
     exitFailure
-  else
-    priv <- getPQPrivate name
-    sf <- signFile priv file
-    let sigPath = file ++ ".sig"
-    saveSigFile sigPath sf
-    putStrLn $ "Signed " ++ file ++ " -> " ++ sigPath
+
+  priv <- getPQPrivate name
+  sf   <- signFile priv file
+  let sigPath = file ++ ".sig"
+  saveSigFile sigPath sf
+  putStrLn $ "Signed " ++ file ++ " -> " ++ sigPath
 
 doCheck :: FilePath -> Maybe String -> IO ()
 doCheck file key = do
   let name = defaultKeyName key
   exist <- keyExist name
-  if not exist then do
-    hPutStrLn stderr "ERROR: please create " ++ name ++ " key before using it" 
+  unless exist $ do
+    hPutStrLn stderr $ "ERROR: please create " ++ name ++ " key before using it"
     exitFailure
-  else
-    pub   <- getPQPublic name
-    sf    <- loadSigFile (file ++ ".sig")
-    ok    <- checkFile pub file sf
-    if ok
-      then putStrLn "OK: signature valid"
-      else do
-        hPutStrLn stderr "FAIL: signature invalid or file modified"
-        exitFailure
+
+  pub <- getPQPublic name
+  sf  <- loadSigFile (file ++ ".sig")
+  ok  <- checkFile pub file sf
+  if ok
+    then putStrLn "OK: signature valid"
+    else do
+      hPutStrLn stderr "FAIL: signature invalid or file modified"
+      exitFailure
 
 optsInfo :: ParserInfo Command
 optsInfo =

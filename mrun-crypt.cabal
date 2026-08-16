@@ -1,11 +1,11 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.39.6.
+-- This file has been generated from package.yaml by hpack version 0.39.1.
 --
 -- see: https://github.com/sol/hpack
 
 name:           mrun-crypt
-version:        0.2.1
+version:        1.0.1
 description:    Please see the README on GitHub at <https://github.com/ruzen42/mcrypt#readme>
 category:       Cryptography
 homepage:       https://github.com/ruzen42/mcrypt#readme
@@ -24,8 +24,8 @@ source-repository head
 
 library
   exposed-modules:
-      Crypt.PQ
       Crypt.Hash
+      Crypt.PQ
       Crypt.PQ.IO
       Crypt.Sig
   other-modules:
