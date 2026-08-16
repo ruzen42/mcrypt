@@ -30,8 +30,10 @@ newtype PQPrivateKey = PQPrivateKey { unPQPrivate :: BS.ByteString }
   deriving (Eq, Show)
  
 newtype PQAlgError = PQAlgError String
+
 instance Show PQAlgError where
   show (PQAlgError s) = "PQAlgError: " ++ s
+
 instance Exception PQAlgError
  
 foreign import ccall unsafe "mcrypt_sig_public_key_len"
