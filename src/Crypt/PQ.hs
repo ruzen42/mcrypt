@@ -21,7 +21,7 @@ import Foreign.C.Types
  
 -- name of the fixed signature algorithm (informational  for inclusion in signature file headers)
 pqAlgorithmName :: String
-pqAlgorithmName = "Dilithium3"
+pqAlgorithmName = "OQS_SIG_alg_ml_dsa_65"
  
 newtype PQPublicKey = PQPublicKey { unPQPublic :: BS.ByteString }
   deriving (Eq, Show)
@@ -61,7 +61,8 @@ foreign import ccall unsafe "mcrypt_sig_verify"
     -> Ptr Word8 -> CSize
     -> Ptr Word8
     -> IO CInt
- 
+
+-- wrappers for C functions
 pqPublicKeyLen :: IO Int
 pqPublicKeyLen = fromIntegral <$> c_pub_len
  
