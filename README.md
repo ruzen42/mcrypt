@@ -11,12 +11,14 @@ A simple liboqs + BLAKE3 keys manager implementation written in Haskell.
 - Public/private key encryption primitives
 - Binary key serialization
 - Stores keys in `~/.mcrypt`
+- Docker image
 
 ## Installation
 
-```bash
+### 'By hand' way
+```sh
 git clone https://github.com/ruzen42/mcrypt.git
-cd mcrypto
+cd mcrypt
 
 cabal build
 cabal install
@@ -24,34 +26,40 @@ cabal install
 
 or
 
-```bash
+```sh
 stack build
 stack install
+```
+
+### Via docker image
+
+```sh
+docker run ruzen42/mcrypt:latest #or specific tag 
 ```
 
 ## Usage
 
 Generate a new key pair:
 
-```bash
+```sh
 mkey --new main
 ```
 
 Show an existing public key:
 
-```bash
+```sh
 mkey --get main
 ```
 
 List all stored keys:
 
-```bash
+```sh
 mkey --list
 ```
 
 Delete a key:
 
-```bash
+```sh
 mkey --delete main
 ```
 
