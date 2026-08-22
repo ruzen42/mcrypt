@@ -8,11 +8,18 @@
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs { inherit system; };
+        hpkgs = pkgs.haskell.packages.native-bignum.ghc9103;
+
+        mrun-crypt =
+          (hpkgs.callCabal2nix "mrun-crypt" ./. { }).overrideAttrs (old: {
+            buildInputs = (old.buildInputs or [ ]) ++ [ pkgs.liboqs ];
+            nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [ pkgs.pkg-config ];
+          });
       in
       {
         devShell = pkgs.mkShell {
           buildInputs = with pkgs; [
-            haskell.compiler.native-bignum.ghc9103
+            hpkgs.ghc
             cabal-install
             stack
             git
@@ -22,9 +29,13 @@
             gnumake
             liboqs
           ];
+
+          shellHook = ''
+            export LD_LIBRARY_PATH="${pkgs.liboqs}/lib:$LD_LIBRARY_PATH"
+          '';
         };
 
-        packages.default = pkgs.haskellPackages.callCabal2nix "mrun-crypt" ./. {};
+        packages.default = mrun-crypt;
       });
 }
 
