@@ -10,14 +10,12 @@
         pkgs = import nixpkgs { inherit system; };
         hpkgs = pkgs.haskell.packages.native-bignum.ghc9103;
 
-        mrun-crypt =
-          (hpkgs.callCabal2nix "mrun-crypt" ./. { }).overrideAttrs (old: {
-            buildInputs = (old.buildInputs or [ ]) ++ [ pkgs.liboqs ];
-            nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [ pkgs.pkg-config ];
-          });
+        mrun-crypt = hpkgs.callCabal2nix "mrun-crypt" ./. {
+          oqs = pkgs.liboqs;
+        };
       in
       {
-        devShell = pkgs.mkShell {
+        devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [
             hpkgs.ghc
             cabal-install
@@ -38,4 +36,3 @@
         packages.default = mrun-crypt;
       });
 }
-
