@@ -31,7 +31,7 @@ doSign file key = do
 
   priv <- getPQPrivate name
   sf   <- signFile priv file
-  let sigPath = file ++ ".sig"
+  let sigPath = file ++ ".mcrypt"
   saveSigFile sigPath sf
   putStrLn $ "Signed " ++ file ++ " -> " ++ sigPath
 
