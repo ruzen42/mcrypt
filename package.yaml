@@ -1,5 +1,5 @@
 name:                mrun-crypt
-version:             1.0.1
+version:             1.1.0
 github:              "ruzen42/mcrypt"
 license:             MIT 
 maintainer:          "ruzen@tuta.io"

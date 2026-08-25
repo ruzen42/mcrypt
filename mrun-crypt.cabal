@@ -5,7 +5,7 @@ cabal-version: 1.12
 -- see: https://github.com/sol/hpack
 
 name:           mrun-crypt
-version:        1.0.1
+version:        1.1.0
 description:    Please see the README on GitHub at <https://github.com/ruzen42/mcrypt#readme>
 category:       Cryptography
 homepage:       https://github.com/ruzen42/mcrypt#readme
@@ -24,9 +24,10 @@ source-repository head
 
 library
   exposed-modules:
+      Crypt
+      Crypt.AES
       Crypt.Hash
-      Crypt.PQ
-      Crypt.PQ.IO
+      Crypt.IO
       Crypt.Sig
   other-modules:
       Paths_mrun_crypt

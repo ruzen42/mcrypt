@@ -20,5 +20,4 @@ hashBytesLazy lbs =
         digest = BLAKE3.hash @32 Nothing chunks :: BLAKE3.Digest 32
         BLAKE3.Digest sizedBa = digest
         rawArray = BAS.unSizedByteArray sizedBa
-        
     in BA.convert rawArray

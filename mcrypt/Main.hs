@@ -1,6 +1,6 @@
 module Main (main) where
 
-import Crypt.PQ.IO (getPQPrivate, getPQPublic, keyExist)
+import Crypt.IO (getPQPrivate, getPQPublic, keyExist)
 import Crypt.Sig (checkFile, loadSigFile, signFile, saveSigFile)
 import Options.Applicative
 import System.Exit (exitFailure)

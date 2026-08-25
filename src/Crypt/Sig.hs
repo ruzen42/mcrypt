@@ -9,7 +9,7 @@ module Crypt.Sig
   ) where
 
 import Crypt.Hash (hashFile)
-import Crypt.PQ
+import Crypt
   ( PQPrivateKey
   , PQPublicKey
   , pqAlgorithmName
