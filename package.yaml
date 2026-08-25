@@ -36,6 +36,8 @@ library:
   - directory
   - blake3
   - ram
+  - aeson
+  - base64-bytestring
   c-sources:
   - cbits/oqs_shim.c
   include-dirs:

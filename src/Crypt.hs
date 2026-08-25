@@ -1,15 +1,15 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 
 module Crypt
-  ( PQPublicKey (..)
-  , PQPrivateKey (..)
+  ( PublicKey (..)
+  , PrivateKey (..)
   , PQAlgError (..)
-  , pqAlgorithmName
-  , pqPublicKeyLen
-  , pqSecretKeyLen
-  , pqKeypair
-  , pqSign
-  , pqVerify
+  , algName
+  , publicKeyLength
+  , secretKeyLength
+  , newKeypair
+  , sign
+  , verify
   ) where
  
 import Control.Exception (Exception, throwIO)
@@ -20,21 +20,21 @@ import Foreign
 import Foreign.C.Types
  
 -- name of the fixed signature algorithm (informational  for inclusion in signature file headers)
-pqAlgorithmName :: String
-pqAlgorithmName = "OQS_SIG_alg_ml_dsa_65"
+algName :: String
+algName = "OQS_SIG_alg_ml_dsa_65"
 
-newtype PQPublicKey = PQPublicKey { unPQPublic :: BS.ByteString }
+newtype PublicKey = PublicKey { unPublic :: BS.ByteString }
   deriving (Eq, Show)
  
-newtype PQPrivateKey = PQPrivateKey { unPQPrivate :: BS.ByteString }
+newtype PrivateKey = PQPrivateKey { unPrivate :: BS.ByteString }
   deriving (Eq, Show)
  
-newtype PQAlgError = PQAlgError String
+newtype AlgError = AlgError String
 
-instance Show PQAlgError where
-  show (PQAlgError s) = "PQAlgError: " ++ s
+instance Show AlgError where
+  show (AlgError s) = "AlgError: " ++ s
 
-instance Exception PQAlgError
+instance Exception AlgError
  
 foreign import ccall unsafe "mcrypt_sig_public_key_len"
   c_pub_len :: IO CSize
@@ -63,27 +63,27 @@ foreign import ccall unsafe "mcrypt_sig_verify"
     -> IO CInt
 
 -- wrappers for C functions
-pqPublicKeyLen :: IO Int
-pqPublicKeyLen = fromIntegral <$> c_pub_len
+publicKeyLength :: IO Int
+publicKeyLength = fromIntegral <$> c_pub_len
  
-pqSecretKeyLen :: IO Int
-pqSecretKeyLen = fromIntegral <$> c_sec_len
+secretKeyLength :: IO Int
+secretKeyLength = fromIntegral <$> c_sec_len
  
-pqMaxSignatureLen :: IO Int
-pqMaxSignatureLen = fromIntegral <$> c_max_sig_len
+signatureMaxLength :: IO Int
+signatureMaxLength = fromIntegral <$> c_max_sig_len
  
 requireAlg :: Int -> IO ()
 requireAlg n =
   when (n == 0) $
     throwIO $ PQAlgError $
-      "liboqs was not built with " ++ pqAlgorithmName
+      "liboqs was not built with " ++ algName
         ++ " support (rebuild liboqs with -DOQS_ENABLE_SIG_dilithium_3=ON)"
  
 -- generate a neww Dilithium3 keypair
-pqKeypair :: IO (PQPublicKey, PQPrivateKey)
-pqKeypair = do
-  pubLen <- pqPublicKeyLen
-  secLen <- pqSecretKeyLen
+newKeypair :: IO (PublicKey, PrivateKey)
+newKeypair = do
+  pubLen <- publicKeyLength
+  secLen <- secretKeyLength
   requireAlg pubLen
   requireAlg secLen
   allocaBytes pubLen $ \pubPtr ->
@@ -92,12 +92,12 @@ pqKeypair = do
       when (rc /= 0) $ throwIO (PQAlgError "OQS_SIG_keypair failed")
       pub <- BS.packCStringLen (castPtr pubPtr, pubLen)
       sec <- BS.packCStringLen (castPtr secPtr, secLen)
-      pure (PQPublicKey pub, PQPrivateKey sec)
+      pure (PublicKey pub, PrivateKey sec)
  
 -- sign a message (in practice: a BLAKE3 digest, please see 'Crypt.Hash' modull) with a D3 private key
-pqSign :: PQPrivateKey -> BS.ByteString -> IO BS.ByteString
-pqSign (PQPrivateKey sec) msg = do
-  maxSigLen <- pqMaxSignatureLen
+sign :: PrivateKey -> BS.ByteString -> IO BS.ByteString
+sign (PrivateKey sec) msg = do
+  maxSigLen <- signatureMaxLength
   requireAlg maxSigLen
   BSU.unsafeUseAsCStringLen msg $ \(msgPtr, msgLen) ->
     BSU.unsafeUseAsCStringLen sec $ \(secPtr, secLen') ->
@@ -116,9 +116,9 @@ pqSign (PQPrivateKey sec) msg = do
  
 -- verify a D3 signature never throws on a bad signature
 -- returns False only throws on genuine misuse (algorithm unavailable)
-pqVerify :: PQPublicKey -> BS.ByteString -> BS.ByteString -> IO Bool
-pqVerify (PQPublicKey pub) msg sig = do
-  pubLen <- pqPublicKeyLen
+verify :: PublicKey -> BS.ByteString -> BS.ByteString -> IO Bool
+verify (PublicKey pub) msg sig = do
+  pubLen <- publicKeyLength
   requireAlg pubLen
   BSU.unsafeUseAsCStringLen msg $ \(msgPtr, msgLen) ->
     BSU.unsafeUseAsCStringLen sig $ \(sigPtr, sigLen) ->

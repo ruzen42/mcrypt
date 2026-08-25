@@ -1,61 +1,107 @@
 module Crypt.IO
-  ( savePQKeys
-  , getPQPublic
-  , getPQPrivate
+  ( save
+  , getPublic 
+  , getPrivate
   , getAllKeys
   , keyExist
   , removeKeys
   ) where
 
-import Crypt (PQPrivateKey (..), PQPublicKey (..))
+import Crypt (PrivateKey (..), PublicKey (..))
+import Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
-import System.Directory (createDirectoryIfMissing
-                        , getHomeDirectory
-                        , listDirectory
-                        , doesDirectoryExist
-                        , removeDirectoryRecursive
-                        )
+import qualified Data.ByteString.Char8 as BC
+import qualified Data.ByteString.Base64 as B64
+import System.Directory
+  ( createDirectoryIfMissing
+  , getHomeDirectory
+  , listDirectory
+  , doesDirectoryExist
+  , removeDirectoryRecursive
+  )
+import System.Directory.ProjectDirs (getUserDataDir)
 import System.FilePath ((</>))
 
-mcrypt :: String
-mcrypt = ".mcrypt"
+getMCryptBaseDir :: IO FilePath
+getMCryptBaseDir = getUserDataDir "mcrypt"
 
-keyDir :: FilePath -> IO FilePath
-keyDir name = do
-  home <- getHomeDirectory
-  let dir = home </> mcrypt </> name
+getKeyDir :: FilePath -> IO FilePath
+getKeyDir name = do
+  base <- getMCryptBaseDir
+  pure $ base </> name
+
+getMCryptDir :: FilePath -> IO FilePath
+getMCryptDir name = do
+  dir <- getKeyDir name
   createDirectoryIfMissing True dir
   pure dir
 
 getAllKeys :: IO [FilePath]
 getAllKeys = do 
-  home <- getHomeDirectory
-  let dir = home </> mcrypt 
-  listDirectory dir 
+  dir <- getMCryptBaseDir 
+  exist <- doesDirectoryExist dir
+  if exist 
+    then listDirectory dir 
+    else pure []
 
 keyExist :: FilePath -> IO Bool
 keyExist name = do
-  dir <- keyDir name
+  dir <- getKeyDir name
   doesDirectoryExist dir
 
-savePQKeys :: PQPublicKey -> PQPrivateKey -> FilePath -> IO ()
-savePQKeys (PQPublicKey pub) (PQPrivateKey priv) name = do
-  dir <- keyDir name
-  BS.writeFile (dir </> "public") pub
-  BS.writeFile (dir </> "private") priv
+save :: PublicKey -> PrivateKey -> FilePath -> IO ()
+save pub priv name = do
+  dir <- getMCryptDir name
+  savePublic pub "example@mcrypt.com" dir
+  savePrivate priv dir
 
-getPQPublic :: FilePath -> IO PQPublicKey
-getPQPublic name = do
-  home <- getHomeDirectory
-  PQPublicKey <$> BS.readFile (home </> mcrypt </> name </> "public")
+savePublic :: PublicKey -> ByteString -> FilePath -> IO ()
+savePublic (PublicKey pub) userData dir = do
+  let key = B64.encode pub
+  BS.writeFile (dir </> "public") ("mcrypt-dilithium3-1.1.0 " <> key <> " " <> userData)
 
-getPQPrivate :: FilePath -> IO PQPrivateKey
-getPQPrivate name = do
-  home <- getHomeDirectory
-  PQPrivateKey <$> BS.readFile (home </> mcrypt </> name </> "private")
+savePrivate :: PrivateKey -> FilePath -> IO ()
+savePrivate (PrivateKey prv) dir = do
+  let key  = B64.encode prv
+      file = "-----BEGIN MCRYPT PRIVATE KEY-----\n" <> key <> "\n-----END MCRYPT PRIVATE KEY-----"
+  BS.writeFile (dir </> "private") file
+
+getPublic :: FilePath -> IO (Either String PublicKey)
+getPublic name = do
+  dir <- getKeyDir name
+  exist <- doesDirectoryExist dir
+  if not exist
+    then pure $ Left "key directory does not exist"
+    else do
+      raw <- BS.readFile (dir </> "public")
+      pure $ PublicKey <$> parsePublic raw 
+  where 
+    parsePublic :: ByteString -> Either String ByteString
+    parsePublic raw = case BC.words raw of
+      (_ : dat : _) -> B64.decode dat
+      [dat]         -> B64.decode dat
+      _             -> Left "public key is invalid" 
+
+getPrivate :: FilePath -> IO (Either String PrivateKey)
+getPrivate name = do
+  dir <- getKeyDir name
+  exist <- doesDirectoryExist dir
+  if not exist
+    then pure $ Left "key directory does not exist"
+    else do
+      raw <- BS.readFile (dir </> "private")
+      pure $ PrivateKey <$> parsePrivate raw 
+  where 
+    parsePrivate :: ByteString -> Either String ByteString
+    parsePrivate raw = 
+      let ls = BC.lines raw
+          content = BS.concat $ filter (\l -> not (BC.isPrefixOf "---" l)) ls
+      in B64.decode content
 
 removeKeys :: FilePath -> IO ()
-removeKeys key = do 
-  home <- getHomeDirectory
-  let dir = home </> mcrypt </> key
-  removeDirectoryRecursive dir
+removeKeys name = do 
+  dir <- getKeyDir name
+  exist <- doesDirectoryExist dir
+  if exist
+    then removeDirectoryRecursive dir
+    else pure ()

@@ -41,7 +41,9 @@ library
   extra-libraries:
       oqs
   build-depends:
-      base >=4.7 && <5
+      aeson
+    , base >=4.7 && <5
+    , base64-bytestring
     , binary
     , blake3
     , bytestring
