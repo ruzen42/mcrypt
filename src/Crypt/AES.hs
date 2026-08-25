@@ -1,9 +1,9 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
-module Crypt.AESParallel
+module Crypt.AES
   ( Key
   , createAESKey
-  , processFileCTRParallel
+  , encryptFile
   ) where
 
 import Crypto.Cipher.AES (AES256)
@@ -51,8 +51,8 @@ addIV iv blocks =
 
     word64ToBS w = BS.pack $ map (\i -> fromIntegral (w `shiftR` (i * 8))) [7,6..0]
 
-processFileCTRParallel :: Key -> FilePath -> FilePath -> IO ()
-processFileCTRParallel (Key keyBS) srcPath dstPath =
+encryptFile :: Key -> FilePath -> FilePath -> IO ()
+encryptFile (Key keyBS) srcPath dstPath =
   case cipherInit keyBS :: CryptoFailable AES256 of
     CryptoFailed err -> error $ "failed to init cipher: " ++ show err
     CryptoPassed cipher -> do
