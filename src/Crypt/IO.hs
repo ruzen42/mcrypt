@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Crypt.IO
   ( save
   , getPublic 
@@ -14,16 +15,14 @@ import qualified Data.ByteString.Char8 as BC
 import qualified Data.ByteString.Base64 as B64
 import System.Directory
   ( createDirectoryIfMissing
-  , getHomeDirectory
   , listDirectory
   , doesDirectoryExist
-  , removeDirectoryRecursive
+  , removeDirectoryRecursive, getAppUserDataDirectory
   )
-import System.Directory.ProjectDirs (getUserDataDir)
 import System.FilePath ((</>))
 
 getMCryptBaseDir :: IO FilePath
-getMCryptBaseDir = getUserDataDir "mcrypt"
+getMCryptBaseDir = getAppUserDataDirectory "mcrypt"
 
 getKeyDir :: FilePath -> IO FilePath
 getKeyDir name = do

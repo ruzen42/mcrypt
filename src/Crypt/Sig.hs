@@ -13,7 +13,7 @@ import Crypt.Hash (hashFile)
 import Crypt
   ( PrivateKey
   , PublicKey
-  , algoName 
+  , algName 
   , sign
   , verify
   )
@@ -38,7 +38,7 @@ signFile priv path = do
   sig <- sign priv digest
   pure SigFile
     { sigHashAlg = "BLAKE3"
-    , sigSignAlg = algoName 
+    , sigSignAlg = algName 
     , sigDigest  = digest
     , sigBytes   = sig
     }

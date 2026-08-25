@@ -3,7 +3,7 @@
 module Crypt
   ( PublicKey (..)
   , PrivateKey (..)
-  , PQAlgError (..)
+  , AlgError (..)
   , algName
   , publicKeyLength
   , secretKeyLength
@@ -26,7 +26,7 @@ algName = "OQS_SIG_alg_ml_dsa_65"
 newtype PublicKey = PublicKey { unPublic :: BS.ByteString }
   deriving (Eq, Show)
  
-newtype PrivateKey = PQPrivateKey { unPrivate :: BS.ByteString }
+newtype PrivateKey = PrivateKey { unPrivate :: BS.ByteString }
   deriving (Eq, Show)
  
 newtype AlgError = AlgError String
@@ -75,7 +75,7 @@ signatureMaxLength = fromIntegral <$> c_max_sig_len
 requireAlg :: Int -> IO ()
 requireAlg n =
   when (n == 0) $
-    throwIO $ PQAlgError $
+    throwIO $ AlgError $
       "liboqs was not built with " ++ algName
         ++ " support (rebuild liboqs with -DOQS_ENABLE_SIG_dilithium_3=ON)"
  
@@ -89,7 +89,7 @@ newKeypair = do
   allocaBytes pubLen $ \pubPtr ->
     allocaBytes secLen $ \secPtr -> do
       rc <- c_keypair pubPtr secPtr
-      when (rc /= 0) $ throwIO (PQAlgError "OQS_SIG_keypair failed")
+      when (rc /= 0) $ throwIO (AlgError "OQS_SIG_keypair failed")
       pub <- BS.packCStringLen (castPtr pubPtr, pubLen)
       sec <- BS.packCStringLen (castPtr secPtr, secLen)
       pure (PublicKey pub, PrivateKey sec)
@@ -109,8 +109,8 @@ sign (PrivateKey sec) msg = do
               (castPtr sigPtr) sigLenPtr
               (castPtr msgPtr) (fromIntegral msgLen)
               (castPtr secPtr)
-          when (secLen' <= 0) $ throwIO (PQAlgError "empty secret key")
-          when (rc /= 0) $ throwIO (PQAlgError "OQS_SIG_sign failed")
+          when (secLen' <= 0) $ throwIO (AlgError "empty secret key")
+          when (rc /= 0) $ throwIO (AlgError "OQS_SIG_sign failed")
           actualLen <- peek sigLenPtr
           BS.packCStringLen (castPtr sigPtr, fromIntegral actualLen)
  
