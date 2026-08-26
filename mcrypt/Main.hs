@@ -1,6 +1,6 @@
 module Main (main) where
 
-import Crypt.IO (getPQPrivate, getPQPublic, keyExist)
+import Crypt.IO (getPrivate, getPublic, keyExist)
 import Crypt.Sig (checkFile, loadSigFile, signFile, saveSigFile)
 import Options.Applicative
 import System.Exit (exitFailure)
@@ -24,33 +24,35 @@ defaultKeyName = maybe "main" id
 doSign :: FilePath -> Maybe String -> IO ()
 doSign file key = do
   let name = defaultKeyName key
-  exist <- keyExist name
-  unless exist $ do
-    hPutStrLn stderr $ "ERROR: please create " ++ name ++ " key before using it"
-    exitFailure
-
-  priv <- getPQPrivate name
-  sf   <- signFile priv file
-  let sigPath = file ++ ".mcrypt"
-  saveSigFile sigPath sf
-  putStrLn $ "Signed " ++ file ++ " -> " ++ sigPath
+  raw <- getPrivate name
+  case raw of
+    Right priv -> do
+      sf   <- signFile priv file
+      let sigPath = file ++ ".mcrypt"
+      saveSigFile sigPath sf
+      putStrLn $ "signed " ++ file ++ " -> " ++ sigPath
+    Left err ->
+      hPutStrLn stderr $ "error: please create " ++ name ++ " key before using it: " ++ err
+      exitFailure
 
 doCheck :: FilePath -> Maybe String -> IO ()
 doCheck file key = do
   let name = defaultKeyName key
-  exist <- keyExist name
-  unless exist $ do
-    hPutStrLn stderr $ "ERROR: please create " ++ name ++ " key before using it"
-    exitFailure
 
-  pub <- getPQPublic name
-  sf  <- loadSigFile (file ++ ".sig")
-  ok  <- checkFile pub file sf
-  if ok
-    then putStrLn "OK: signature valid"
-    else do
-      hPutStrLn stderr "FAIL: signature invalid or file modified"
+  raw <- getPublic name
+  case raw of 
+    Right pub -> do
+      sf  <- loadSigFile (file ++ ".mcrypt")
+      ok  <- checkFile pub file sf
+      if ok
+        then putStrLn "good: signature valid"
+        else do
+          hPutStrLn stderr "bad: signature invalid or file modified"
+          exitFailure
+    Left err -> do
+      hPutStrLn stderr $ "error: please create " ++ name ++ " key before using it: " ++ err
       exitFailure
+      
 
 optsInfo :: ParserInfo Command
 optsInfo =

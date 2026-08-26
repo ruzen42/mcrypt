@@ -1,8 +1,6 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TypeApplications #-}
 
-
-
 module Crypt.Hash (hashFile) where
 
 import qualified Data.ByteString as BS
@@ -11,14 +9,10 @@ import qualified Data.ByteArray as BA
 import qualified Data.ByteArray.Sized as BAS
 import qualified BLAKE3
 
-
-
 hashFile :: FilePath -> IO BS.ByteString
 hashFile path = do
   contents <- BL.readFile path
-  pure $! hashBytesLazy contents
-
-
+  pure $ hashBytesLazy contents
 
 hashBytesLazy :: BL.ByteString -> BS.ByteString
 hashBytesLazy lbs =

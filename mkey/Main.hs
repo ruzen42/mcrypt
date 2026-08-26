@@ -1,8 +1,8 @@
 module Main (main) where
 
 import Options.Applicative 
-import Crypt.IO (savePQKeys, getPQPublic, getAllKeys, keyExist, removeKeys)
-import Crypt (pqKeypair)
+import Crypt.IO (save, getPublic, getAllKeys, keyExist, removeKeys)
+import Crypt (newKeypair, printKey)
 
 data Command
     = New String
@@ -16,18 +16,16 @@ main = do
 
     case act of
         New name -> do
-            (pub, prv) <- pqKeypair 
-            savePQKeys pub prv name
-
+            (pub, prv) <- newKeypair 
+            save pub prv name
             putStrLn $ "created key \"" ++ name ++ "\""
 
         Get name -> do
-            exist <- keyExist name 
-            mpub <- getPQPublic name
+            mpub <- getPublic name
 
-            case exist of
-                True -> print mpub
-                _    -> putStrLn "key not found... :("
+            case mpub of
+                Right pub  -> printKey $ pub 
+                Left err   -> putStrLn err 
 
         List -> do
             keys <- getAllKeys

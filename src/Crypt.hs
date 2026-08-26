@@ -1,4 +1,5 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
+{-# LANGUAGE OverloadedStrings        #-}
 
 module Crypt
   ( PublicKey (..)
@@ -10,6 +11,7 @@ module Crypt
   , newKeypair
   , sign
   , verify
+  , printKey
   ) where
  
 import Control.Exception (Exception, throwIO)
@@ -22,6 +24,9 @@ import Foreign.C.Types
 -- name of the fixed signature algorithm (informational  for inclusion in signature file headers)
 algName :: String
 algName = "OQS_SIG_alg_ml_dsa_65"
+
+printKey :: PublicKey -> IO ()
+printKey key = BS.putStr $ (unPublic key) <> "\n"
 
 newtype PublicKey = PublicKey { unPublic :: BS.ByteString }
   deriving (Eq, Show)

@@ -1,25 +1,25 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-
 module Crypt.AES
   ( Key
   , createAESKey
+  , keyFromBytes
   , encryptFile
+  , decryptFile
   ) where
 
 import Crypto.Cipher.AES (AES256)
 import Crypto.Cipher.Types (BlockCipher(..), Cipher(..), IV, makeIV)
 import Crypto.Random (getRandomBytes)
+import Crypto.Error (CryptoFailable(..))
 import Control.Concurrent.Async (mapConcurrently_)
 import Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
-import System.IO
-  ( FilePath, IOMode(..), withBinaryFile, hSeek, SeekMode(..)
-  , hGet, hPut, hFileSize, Handle
-  )
+import Data.Bits (shiftR)
 import Data.Word (Word64)
-import Foreign.Marshal.Alloc (allocaBytes)
-import Foreign.Ptr (castPtr)
-import Foreign.Storable (poke, peek)
+import System.IO
+  ( IOMode(..), withBinaryFile, hSeek, SeekMode(..)
+  , hFileSize, hSetFileSize
+  )
 
 newtype Key = Key ByteString
   deriving (Eq, Show)
@@ -27,58 +27,80 @@ newtype Key = Key ByteString
 createAESKey :: IO Key
 createAESKey = Key <$> getRandomBytes 32
 
+keyFromBytes :: ByteString -> Either String Key
+keyFromBytes bs
+  | BS.length bs == 32 = Right (Key bs)
+  | otherwise = Left "AES-256 key must be 32 bytes"
+
 chunkSize :: Word64
-chunkSize = 64 * 1024 * 1024 -- 64MiB
+chunkSize = 64 * 1024 * 1024 -- 64 MiB
 
-addIV :: IV AES256 -> Word64 -> IV AES256
-addIV iv blocks =
-  let ivBS = BS.copy $ cipherIVuntag iv
-      (headIV, tailIV) = BS.splitAt 8 ivBS
-  in case makeIVBytes (incTail tailIV blocks) of
-       Just newIv -> newIv
-       Nothing    -> error "failed to increment IV"
-  where
-    incTail bs add =
-      let val = bsToWord64 bs
-          newVal = val + add
-      in headIV `BS.append` word64ToBS newVal
+addCounter :: ByteString -> Word64 -> IV AES256
+addCounter nonceBS blocks =
+  let (prefix, counterBS) = BS.splitAt 8 nonceBS
+      counterVal = bsToWord64BE counterBS
+      newCounter = word64ToBSBE (counterVal + blocks)
+      newNonce = prefix `BS.append` newCounter
+  in case makeIV newNonce :: Maybe (IV AES256) of
+       Just iv -> iv
+       Nothing -> error "internal error: bad nonce length"
 
-    makeIVBytes b = makeIV b :: Maybe (IV AES256)
+bsToWord64BE :: ByteString -> Word64
+bsToWord64BE = BS.foldl' (\acc w -> (acc `shiftL'` 8) + fromIntegral w) 0
+  where shiftL' x n = x * (2 ^ n)
 
-    bsToWord64 bs = unsafePerformIO $ BS.useAsCString bs $ \ptr -> do
-      w <- peek (castPtr ptr :: Ptr Word64)
-      return (byteSwap64 w)
+word64ToBSBE :: Word64 -> ByteString
+word64ToBSBE w = BS.pack [ fromIntegral (w `shiftR` (i * 8)) | i <- [7,6..0] ]
 
-    word64ToBS w = BS.pack $ map (\i -> fromIntegral (w `shiftR` (i * 8))) [7,6..0]
+initCipher :: Key -> AES256
+initCipher (Key keyBS) = case cipherInit keyBS of
+  CryptoFailed err -> error $ "failed to init cipher: " ++ show err
+  CryptoPassed c    -> c
 
 encryptFile :: Key -> FilePath -> FilePath -> IO ()
-encryptFile (Key keyBS) srcPath dstPath =
-  case cipherInit keyBS :: CryptoFailable AES256 of
-    CryptoFailed err -> error $ "failed to init cipher: " ++ show err
-    CryptoPassed cipher -> do
-      rawIv <- getRandomBytes 16
-      case makeIV rawIv :: Maybe (IV AES256) of
-        Nothing -> error "Invalid IV"
-        Just initialIv -> do
-          BS.writeFile dstPath rawIv
-          
-          withBinaryFile srcPath ReadMode $ \hIn -> do
-            totalSize <- fromIntegral <$> hFileSize hIn
-            let numChunks = (totalSize + chunkSize - 1) `div` chunkSize
-                offsets = [0, chunkSize .. totalSize - 1]
-
-            mapConcurrently_ (processChunk cipher initialIv) offsets
+encryptFile key srcPath dstPath = do
+  let cipher = initCipher key
+  nonceBS <- getRandomBytes 16
+  withBinaryFile srcPath ReadMode $ \hIn -> do
+    totalSize <- fromIntegral <$> hFileSize hIn
+    withBinaryFile dstPath WriteMode $ \hOut ->
+      hSetFileSize hOut (fromIntegral (16 + totalSize) :: Integer)
+    BS.writeFile dstPath nonceBS  
+    let offsets = takeWhileNonEmpty [0, chunkSize .. ] totalSize
+    mapConcurrently_ (processChunk cipher nonceBS srcPath dstPath) offsets
   where
-    processChunk cipher baseIv offset =
-      withBinaryFile srcPath ReadMode $ \hIn ->
-        withBinaryFile dstPath ReadWriteMode $ \hOut -> do
-          let blocksOffset = offset `div` 16
-              chunkIv = addIV baseIv blocksOffset
-          
+    takeWhileNonEmpty offs total = takeWhile (< total) offs
+
+    processChunk cipher nonceBS src dst offset =
+      withBinaryFile src ReadMode $ \hIn ->
+        withBinaryFile dst ReadWriteMode $ \hOut -> do
           hSeek hIn AbsoluteSeek (fromIntegral offset)
-          hSeek hOut AbsoluteSeek (fromIntegral $ offset + 16) 
-          
           chunkData <- BS.hGet hIn (fromIntegral chunkSize)
-          let processedData = ctrCombine cipher chunkIv chunkData
-          
-          BS.hPut hOut processedData
+          let blocksOffset = offset `div` 16
+              chunkIv = addCounter nonceBS blocksOffset
+              out = ctrCombine cipher chunkIv chunkData
+          hSeek hOut AbsoluteSeek (fromIntegral (16 + offset))
+          BS.hPut hOut out
+
+decryptFile :: Key -> FilePath -> FilePath -> IO ()
+decryptFile key srcPath dstPath = do
+  let cipher = initCipher key
+  nonceBS <- withBinaryFile srcPath ReadMode $ \hIn -> BS.hGet hIn 16
+  withBinaryFile srcPath ReadMode $ \hIn -> do
+    fullSize <- fromIntegral <$> hFileSize hIn
+    let totalSize = fullSize - 16
+    withBinaryFile dstPath WriteMode $ \hOut ->
+      hSetFileSize hOut (fromIntegral totalSize :: Integer)
+    let offsets = takeWhile (< totalSize) [0, chunkSize ..]
+    mapConcurrently_ (processChunk cipher nonceBS srcPath dstPath) offsets
+  where
+    processChunk cipher nonceBS src dst offset =
+      withBinaryFile src ReadMode $ \hIn ->
+        withBinaryFile dst ReadWriteMode $ \hOut -> do
+          hSeek hIn AbsoluteSeek (fromIntegral (16 + offset))
+          chunkData <- BS.hGet hIn (fromIntegral chunkSize)
+          let blocksOffset = offset `div` 16
+              chunkIv = addCounter nonceBS blocksOffset
+              out = ctrCombine cipher chunkIv chunkData
+          hSeek hOut AbsoluteSeek (fromIntegral offset)
+          BS.hPut hOut out
