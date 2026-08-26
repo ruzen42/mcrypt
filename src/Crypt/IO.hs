@@ -2,10 +2,13 @@
 module Crypt.IO
   ( save
   , getPublic 
+  , getPublicRaw
   , getPrivate
   , getAllKeys
   , keyExist
   , removeKeys
+  , getMCryptDir
+  , getKeyDir
   ) where
 
 import Crypt (PrivateKey (..), PublicKey (..))
@@ -17,12 +20,17 @@ import System.Directory
   ( createDirectoryIfMissing
   , listDirectory
   , doesDirectoryExist
-  , removeDirectoryRecursive, getAppUserDataDirectory
+  , removeDirectoryRecursive
   )
+import System.Directory.OsPath (getXdgDirectory, XdgDirectory(..))
 import System.FilePath ((</>))
+import System.OsPath (decodeFS, encodeFS)
 
 getMCryptBaseDir :: IO FilePath
-getMCryptBaseDir = getAppUserDataDirectory "mcrypt"
+getMCryptBaseDir = do 
+  path <- encodeFS "mcrypt"
+  osPath <- getXdgDirectory XdgData path
+  decodeFS osPath
 
 getKeyDir :: FilePath -> IO FilePath
 getKeyDir name = do
@@ -57,7 +65,7 @@ save pub priv name = do
 savePublic :: PublicKey -> ByteString -> FilePath -> IO ()
 savePublic (PublicKey pub) userData dir = do
   let key = B64.encode pub
-  BS.writeFile (dir </> "public") ("mcrypt-dilithium3-1.1.0 " <> key <> " " <> userData)
+  BS.writeFile (dir </> "public") ("mcrypt-dilithium3 " <> key <> " " <> userData)
 
 savePrivate :: PrivateKey -> FilePath -> IO ()
 savePrivate (PrivateKey prv) dir = do
@@ -65,6 +73,16 @@ savePrivate (PrivateKey prv) dir = do
       file = "-----BEGIN MCRYPT PRIVATE KEY-----\n" <> key <> "\n-----END MCRYPT PRIVATE KEY-----"
   BS.writeFile (dir </> "private") file
 
+getPublicRaw :: FilePath -> IO (Either String String)
+getPublicRaw name = do
+  dir <- getKeyDir name
+  exist <- doesDirectoryExist dir
+  if not exist
+    then pure $ Left "key directory does not exist"
+    else do
+      raw <- Prelude.readFile (dir </> "public")
+      pure $ Right raw 
+ 
 getPublic :: FilePath -> IO (Either String PublicKey)
 getPublic name = do
   dir <- getKeyDir name

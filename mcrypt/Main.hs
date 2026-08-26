@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Main (main) where
 
 import Crypt.IO (getPrivate, getPublic)
@@ -8,12 +9,15 @@ import System.Exit (exitFailure)
 import System.IO (hPutStrLn, stderr)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Base64 as B64
+import Data.Version (showVersion)
+import Paths_mcrypt_tools (version)
 
 data Command
   = Sign    String (Maybe String)
   | Check   String (Maybe String)
   | Encrypt String (Maybe String)
   | Decrypt String (Maybe String)
+  | Version
 
 main :: IO ()
 main = do
@@ -23,6 +27,7 @@ main = do
     Check file key   -> doCheck file key
     Encrypt file key -> doEncrypt file key
     Decrypt file key -> doDecrypt file key
+    Version          -> putStrLn $ showVersion version 
 
 defaultKeyName :: Maybe String -> String
 defaultKeyName = maybe "main" id
@@ -53,7 +58,7 @@ doCheck file key = do
           hPutStrLn stderr "bad: signature invalid or file modified"
           exitFailure
     Left err -> do
-      hPutStrLn stderr $ "error: please create " ++ name ++ " key before using it: " ++ err
+      hPutStrLn stderr $ "error: please create " ++ name ++ " key before using it (by flag --new), " ++ err
       exitFailure
   where
     loadSigOrExit f = do
@@ -79,25 +84,23 @@ doEncrypt file key = do
       putStrLn $ "key saved -> " ++ keyPath
       putStrLn "WARNING: keep the .key file secret and separate from the .enc file"
     Left err -> do
-      hPutStrLn stderr $ "error: please create " ++ name ++ " key before using it: " ++ err
+      hPutStrLn stderr $ "error: please create " ++ name ++ " key before using it (by flag --new), " ++ err
       exitFailure
 
--- | Расшифровывает file (ожидается путь к .enc), ключ читается из
--- file-без-суффикса-.enc ++ ".key", либо из file ++ ".key" если суффикса нет.
 doDecrypt :: FilePath -> Maybe String -> IO ()
 doDecrypt file key = do
   let name = defaultKeyName key
   raw <- getPublic name
   case raw of
     Right pub -> do
-      let keyPath = file ++ ".key"
+      let keyPath = file ++ ".enc.key"
       keyRaw <- BS.readFile keyPath
       case B64.decode keyRaw >>= AES.keyFromBytes of
         Left err -> do
           hPutStrLn stderr $ "error: bad key file " ++ keyPath ++ ": " ++ err
           exitFailure
         Right aesKey -> do
-          let dstPath = stripEncSuffix file ++ ".dec"
+          let dstPath = stripEncSuffix file ++ ".new"
           result <- decryptFile pub aesKey file dstPath
           case result of
             Left err -> do
@@ -105,7 +108,7 @@ doDecrypt file key = do
               exitFailure
             Right () -> putStrLn $ "decrypted " ++ file ++ " -> " ++ dstPath
     Left err -> do
-      hPutStrLn stderr $ "error: please create " ++ name ++ " key before using it: " ++ err
+      hPutStrLn stderr $ "error: please create " ++ name ++ " key before using it (by flag --new), " ++ err
       exitFailure
   where
     stripEncSuffix f =
@@ -134,7 +137,7 @@ keyOpt =
       )
 
 commandParser :: Parser Command
-commandParser = signParser <|> checkParser <|> encryptParser <|> decryptParser
+commandParser = signParser <|> checkParser <|> encryptParser <|> decryptParser <|> versionParser
 
 signParser :: Parser Command
 signParser =
@@ -152,11 +155,18 @@ checkParser =
   Check
     <$> strOption
       ( long "check"
-          <> short 'C'
+          <> short 'c'
           <> metavar "FILE"
           <> help "check signature"
       )
     <*> keyOpt
+
+versionParser :: Parser Command
+versionParser = flag' Version
+  ( long "version"
+ <> short 'v'
+ <> help "print version in major.minor.patch tags format"
+  )
 
 encryptParser :: Parser Command
 encryptParser =

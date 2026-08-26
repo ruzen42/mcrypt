@@ -1,41 +1,42 @@
 module Main (main) where
 
 import Options.Applicative 
-import Crypt.IO (save, getPublic, getAllKeys, keyExist, removeKeys)
-import Crypt (newKeypair, printKey)
+import Crypt.IO (save, getPublicRaw, getKeyDir, getAllKeys, removeKeys)
+import Crypt (newKeypair)
+import Data.Version (showVersion)
+import Paths_mcrypt_tools (version)
 
 data Command
     = New String
     | Get String
     | List
+    | Version
     | Delete String
 
 main :: IO ()
 main = do
     act <- execParser optsInfo
-
     case act of
         New name -> do
             (pub, prv) <- newKeypair 
             save pub prv name
             putStrLn $ "created key \"" ++ name ++ "\""
-
         Get name -> do
-            mpub <- getPublic name
-
-            case mpub of
-                Right pub  -> printKey $ pub 
-                Left err   -> putStrLn err 
-
+            pub <- getPublicRaw name
+            case pub of
+              Right key -> putStrLn key
+              Left err  -> putStrLn err
         List -> do
-            keys <- getAllKeys
+            raw  <- getAllKeys
+            keys <- mapM getKeyDir raw
             mapM_ putStrLn keys
 
         Delete name -> removeKeys name 
+        Version     -> 
+          putStrLn $ showVersion version
 
 optsInfo :: ParserInfo Command
-optsInfo =
-    info
+optsInfo = info
         (commandParser <**> helper)
         ( fullDesc
        <> progDesc "simple cryptokeys generator"
@@ -47,6 +48,14 @@ commandParser =
     <|> getParser
     <|> listParser
     <|> deleteParser
+    <|> versionParser
+
+versionParser :: Parser Command
+versionParser = flag' Version
+  ( long "version"
+ <> short 'v'
+ <> help "print version in major.minor.patch tags format"
+  )
 
 newParser :: Parser Command
 newParser =

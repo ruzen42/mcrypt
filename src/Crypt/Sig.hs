@@ -88,7 +88,7 @@ decryptFile :: PublicKey -> AES.Key -> FilePath -> FilePath -> IO (Either String
 decryptFile pub aesKey srcPath dstPath = do
   sfResult <- loadSigFile (srcPath ++ ".mcrypt")
   case sfResult of
-    Left err -> pure $ Left ("no valid signature file: " ++ err)
+    Left err -> pure $ Left $ "no valid signature file: " ++ err
     Right sf -> do
       ok <- checkFile pub srcPath sf
       if not ok
