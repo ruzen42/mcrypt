@@ -57,7 +57,7 @@ executables:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - mrun-crypt
+    - mcrypt-tools
     - optparse-applicative
     - base64-bytestring
     - bytestring 
@@ -69,16 +69,6 @@ executables:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - mrun-crypt
+    - mcrypt-tools
     - optparse-applicative
 
-tests:
-  mrun-crypt-test:
-    main:                Spec.hs
-    source-dirs:         test
-    ghc-options:
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
-    dependencies:
-    - mrun-crypt

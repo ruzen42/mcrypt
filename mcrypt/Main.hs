@@ -1,6 +1,6 @@
 module Main (main) where
 
-import Crypt.IO (getPrivate, getPublic, keyExist)
+import Crypt.IO (getPrivate, getPublic)
 import Crypt.Sig (sign, verify, loadSigFile, encryptFile, decryptFile)
 import qualified Crypt.AES as AES
 import Options.Applicative
