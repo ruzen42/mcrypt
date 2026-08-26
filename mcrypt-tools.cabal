@@ -1,0 +1,98 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.39.1.
+--
+-- see: https://github.com/sol/hpack
+
+name:           mcrypt-tools
+version:        2.0.0
+description:    Please see the README on GitHub at <https://github.com/ruzen42/mcrypt#readme>
+category:       Cryptography
+homepage:       https://github.com/ruzen42/mcrypt#readme
+bug-reports:    https://github.com/ruzen42/mcrypt/issues
+maintainer:     ruzen@tuta.io
+license:        MIT
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    CHANGELOG.md
+
+source-repository head
+  type: git
+  location: https://github.com/ruzen42/mcrypt
+
+library
+  exposed-modules:
+      Crypt
+      Crypt.AES
+      Crypt.Hash
+      Crypt.IO
+      Crypt.Sig
+  other-modules:
+      Paths_mcrypt_tools
+  hs-source-dirs:
+      src
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
+  include-dirs:
+      cbits
+  c-sources:
+      cbits/oqs_shim.c
+  extra-libraries:
+      oqs
+  build-depends:
+      aeson
+    , async
+    , base >=4.7 && <5
+    , base64-bytestring
+    , binary
+    , blake3
+    , bytestring
+    , cryptonite
+    , directory
+    , filepath
+    , ram
+    , random
+    , text
+  default-language: Haskell2010
+
+executable mcrypt
+  main-is: Main.hs
+  other-modules:
+      Paths_mcrypt_tools
+  hs-source-dirs:
+      mcrypt
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , base64-bytestring
+    , bytestring
+    , mrun-crypt
+    , optparse-applicative
+  default-language: Haskell2010
+
+executable mkey
+  main-is: Main.hs
+  other-modules:
+      Paths_mcrypt_tools
+  hs-source-dirs:
+      mkey
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , mrun-crypt
+    , optparse-applicative
+  default-language: Haskell2010
+
+test-suite mrun-crypt-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Paths_mcrypt_tools
+  hs-source-dirs:
+      test
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , mrun-crypt
+  default-language: Haskell2010
