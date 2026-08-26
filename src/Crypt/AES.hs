@@ -37,7 +37,7 @@ keyFromBytes bs
   | otherwise = Left "AES-256 key must be 32 bytes"
 
 chunkSize :: Word64
-chunkSize = 64 * 1024 * 1024 -- 64 MiB, кратно 16
+chunkSize = 64 * 1024 * 1024 -- 64 MiB
 
 addCounter :: ByteString -> Word64 -> IV AES256
 addCounter nonceBS blocks =
