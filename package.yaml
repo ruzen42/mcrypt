@@ -1,4 +1,4 @@
-name:                mrun-crypt
+name:                mcrypt-tools
 version:             2.0.0
 github:              "ruzen42/mcrypt"
 license:             MIT 
@@ -59,6 +59,8 @@ executables:
     dependencies:
     - mrun-crypt
     - optparse-applicative
+    - base64-bytestring
+    - bytestring 
   mkey:
     main:                Main.hs
     source-dirs:         mkey 

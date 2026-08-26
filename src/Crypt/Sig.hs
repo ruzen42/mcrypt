@@ -70,7 +70,6 @@ loadSigFile path = do
     Just sf -> pure $ Right sf
     Nothing -> pure $ Left "failed to parse signature file: invalid json or base64 data"
 
-
 sign :: PrivateKey -> FilePath -> IO SigFile
 sign priv path = do
   sf <- signFile priv path

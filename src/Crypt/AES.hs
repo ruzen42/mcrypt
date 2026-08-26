@@ -3,6 +3,7 @@ module Crypt.AES
   ( Key
   , createAESKey
   , keyFromBytes
+  , keyBytes
   , encryptFile
   , decryptFile
   ) where
@@ -27,13 +28,16 @@ newtype Key = Key ByteString
 createAESKey :: IO Key
 createAESKey = Key <$> getRandomBytes 32
 
+keyBytes :: Key -> ByteString
+keyBytes (Key bs) = bs
+
 keyFromBytes :: ByteString -> Either String Key
 keyFromBytes bs
   | BS.length bs == 32 = Right (Key bs)
   | otherwise = Left "AES-256 key must be 32 bytes"
 
 chunkSize :: Word64
-chunkSize = 64 * 1024 * 1024 -- 64 MiB
+chunkSize = 64 * 1024 * 1024 -- 64 MiB, кратно 16
 
 addCounter :: ByteString -> Word64 -> IV AES256
 addCounter nonceBS blocks =
@@ -57,6 +61,7 @@ initCipher (Key keyBS) = case cipherInit keyBS of
   CryptoFailed err -> error $ "failed to init cipher: " ++ show err
   CryptoPassed c    -> c
 
+-- File: [16 bytes nonce]
 encryptFile :: Key -> FilePath -> FilePath -> IO ()
 encryptFile key srcPath dstPath = do
   let cipher = initCipher key
@@ -82,6 +87,7 @@ encryptFile key srcPath dstPath = do
           hSeek hOut AbsoluteSeek (fromIntegral (16 + offset))
           BS.hPut hOut out
 
+-- CTR is symmetric
 decryptFile :: Key -> FilePath -> FilePath -> IO ()
 decryptFile key srcPath dstPath = do
   let cipher = initCipher key
