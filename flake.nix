@@ -10,7 +10,7 @@
         pkgs = import nixpkgs { inherit system; };
         hpkgs = pkgs.haskell.packages.native-bignum.ghc9103;
 
-        mrun-crypt = hpkgs.callCabal2nix "mrun-crypt" ./. {
+        mcrypt-tools = hpkgs.callCabal2nix "mcrypt-tools" ./. {
           oqs = pkgs.liboqs;
         };
       in
@@ -33,6 +33,6 @@
           '';
         };
 
-        packages.default = mrun-crypt;
+        packages.default = mcrypt-tools;
       });
 }
