@@ -1,5 +1,5 @@
 name:                mcrypt-tools
-version:             2.0.0-rc
+version:             2.0.1
 github:              "ruzen42/mcrypt"
 license:             MIT 
 maintainer:          "ruzen@tuta.io"
@@ -10,7 +10,7 @@ extra-source-files:
 
 category:            Cryptography 
 
-description:         Please see the README on GitHub at <https://github.com/ruzen42/mcrypt#readme>
+description:         Simple tools for sign with liboqs (PQ) 
 
 dependencies:
 - base >= 4.7 && < 5

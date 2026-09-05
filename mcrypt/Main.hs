@@ -39,7 +39,7 @@ doSign file key = do
   case raw of
     Right priv -> do
       _ <- sign priv file
-      putStrLn $ "signed " ++ file ++ " -> " ++ file ++ ".mcrypt"
+      putStrLn $ "signed " ++ file ++ " -> " ++ file ++ ".asc"
     Left err -> do
       hPutStrLn stderr $ "error: please create " ++ name ++ " key before using it: " ++ err
       exitFailure
@@ -62,7 +62,7 @@ doCheck file key = do
       exitFailure
   where
     loadSigOrExit f = do
-      r <- loadSigFile (f ++ ".mcrypt")
+      r <- loadSigFile (f ++ ".asc")
       case r of
         Right sf -> pure sf
         Left err -> do

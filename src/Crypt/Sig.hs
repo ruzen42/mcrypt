@@ -1,8 +1,8 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Crypt.Sig
-  ( SigFile (..)
+  module Crypt.Sig
+( SigFile (..)
   , signFile
   , checkFile
   , saveSigFile
@@ -14,23 +14,23 @@ module Crypt.Sig
   ) where
 
 import Crypt.Hash (hashFile)
-import qualified Crypt as Dilithium
+  import qualified Crypt as Dilithium
 import Crypt (PrivateKey, PublicKey, algName)
-import qualified Crypt.AES as AES
-import Data.Aeson (FromJSON, ToJSON, encode, decode)
+  import qualified Crypt.AES as AES
+  import Data.Aeson (FromJSON, ToJSON, encode, decode)
 import Data.ByteString (ByteString)
-import qualified Data.ByteString.Base64 as B64
-import qualified Data.ByteString.Lazy as BSL
-import GHC.Generics (Generic)
+  import qualified Data.ByteString.Base64 as B64
+  import qualified Data.ByteString.Lazy as BSL
+  import GHC.Generics (Generic)
 import Data.Text (Text)
-import qualified Data.Text.Encoding as TE
+  import qualified Data.Text.Encoding as TE
 
-data SigFile = SigFile
-  { sigHashAlg :: String        -- "BLAKE3"
+  data SigFile = SigFile
+{ sigHashAlg :: String        -- "BLAKE3"
   , sigSignAlg :: String        -- from Crypt.algName
-  , sigDigest  :: Text          -- Base64(digest)
-  , sigBytes   :: Text          -- Base64(signature)
-  } deriving (Show, Generic)
+    , sigDigest  :: Text          -- Base64(digest)
+    , sigBytes   :: Text          -- Base64(signature)
+} deriving (Show, Generic)
 
 instance ToJSON SigFile
 instance FromJSON SigFile
@@ -43,37 +43,37 @@ unb64 = B64.decode . TE.encodeUtf8
 
 signFile :: PrivateKey -> FilePath -> IO SigFile
 signFile priv path = do
-  digest <- hashFile path
-  sig <- Dilithium.sign priv digest
-  pure SigFile
-    { sigHashAlg = "BLAKE3"
-    , sigSignAlg = algName
+digest <- hashFile path
+sig <- Dilithium.sign priv digest
+pure SigFile
+{ sigHashAlg = "BLAKE3"
+  , sigSignAlg = algName
     , sigDigest  = b64 digest
     , sigBytes   = b64 sig
-    }
+}
 
 checkFile :: PublicKey -> FilePath -> SigFile -> IO Bool
 checkFile pub path sf = do
-  digest <- hashFile path
+digest <- hashFile path
   case (unb64 (sigDigest sf), unb64 (sigBytes sf)) of
-    (Right storedDigest, Right sig)
-      | digest == storedDigest -> Dilithium.verify pub digest sig
-    _ -> pure False
+(Right storedDigest, Right sig)
+  | digest == storedDigest -> Dilithium.verify pub digest sig
+  _ -> pure False
 
-saveSigFile :: FilePath -> SigFile -> IO ()
+  saveSigFile :: FilePath -> SigFile -> IO ()
 saveSigFile path sf = BSL.writeFile path (encode sf)
 
 loadSigFile :: FilePath -> IO (Either String SigFile)
-loadSigFile path = do
+  loadSigFile path = do
   content <- BSL.readFile path
   case decode content of
-    Just sf -> pure $ Right sf
-    Nothing -> pure $ Left "failed to parse signature file: invalid json or base64 data"
+  Just sf -> pure $ Right sf
+  Nothing -> pure $ Left "failed to parse signature file: invalid json or base64 data"
 
-sign :: PrivateKey -> FilePath -> IO SigFile
-sign priv path = do
+  sign :: PrivateKey -> FilePath -> IO SigFile
+  sign priv path = do
   sf <- signFile priv path
-  saveSigFile (path ++ ".mcrypt") sf
+  saveSigFile (path ++ ".asc") sf
   pure sf
 
 verify :: PublicKey -> FilePath -> SigFile -> IO Bool
@@ -86,7 +86,7 @@ encryptFile priv aesKey srcPath dstPath = do
 
 decryptFile :: PublicKey -> AES.Key -> FilePath -> FilePath -> IO (Either String ())
 decryptFile pub aesKey srcPath dstPath = do
-  sfResult <- loadSigFile (srcPath ++ ".mcrypt")
+  sfResult <- loadSigFile (srcPath ++ ".asc")
   case sfResult of
     Left err -> pure $ Left $ "no valid signature file: " ++ err
     Right sf -> do
