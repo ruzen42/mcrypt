@@ -13,11 +13,11 @@ import Data.Version (showVersion)
 import Paths_mcrypt (version)
 
 data Command
-  = Sign    String (Maybe String)
-  | Check   String (Maybe String)
-  | Encrypt String (Maybe String)
-  | Decrypt String (Maybe String)
-  | Version
+  = Sign    FilePath (Maybe String)
+  | Check   FilePath (Maybe String)
+  | Encrypt FilePath (Maybe String)
+  | Decrypt FilePath (Maybe String)
+  | Version Bool
 
 main :: IO ()
 main = do
@@ -27,10 +27,17 @@ main = do
     Check file key   -> doCheck file key
     Encrypt file key -> doEncrypt file key
     Decrypt file key -> doDecrypt file key
-    Version          -> putStrLn $ showVersion version 
+    Version detailed ->
+      if detailed
+        then do
+          putStrLn $ "mcrypt " ++ showVersion version
+          putStrLn "component: mcrypt (file signing and encryption CLI)"
+          putStrLn "supported algorithms: ml-dsa-65"
+          putStrLn "protocols: ML-DSA-65 : signatures, BLAKE3 : digests, AES-256-CTR : encryption"
+        else putStrLn $ showVersion version
 
 defaultKeyName :: Maybe String -> String
-defaultKeyName = maybe "main" id
+defaultKeyName = maybe "master" id
 
 doSign :: FilePath -> Maybe String -> IO ()
 doSign file key = do
@@ -58,7 +65,7 @@ doCheck file key = do
           hPutStrLn stderr "bad: signature invalid or file modified"
           exitFailure
     Left err -> do
-      hPutStrLn stderr $ "error: please create " ++ name ++ " key before using it (by flag --new), " ++ err
+      hPutStrLn stderr $ "error: please create " ++ name ++ " key before using it `mkey new " ++ name ++ "`\t" ++ err
       exitFailure
   where
     loadSigOrExit f = do
@@ -84,7 +91,7 @@ doEncrypt file key = do
       putStrLn $ "key saved -> " ++ keyPath
       putStrLn "WARNING: keep the .key file secret and separate from the .enc file"
     Left err -> do
-      hPutStrLn stderr $ "error: please create " ++ name ++ " key before using it (by flag --new), " ++ err
+      hPutStrLn stderr $ "error: please create " ++ name ++ " key before using it `mkey new " ++ name ++ "`\t" ++ err
       exitFailure
 
 doDecrypt :: FilePath -> Maybe String -> IO ()
@@ -108,7 +115,7 @@ doDecrypt file key = do
               exitFailure
             Right () -> putStrLn $ "decrypted " ++ file ++ " -> " ++ dstPath
     Left err -> do
-      hPutStrLn stderr $ "error: please create " ++ name ++ " key before using it (by flag --new), " ++ err
+      hPutStrLn stderr $ "error: please create " ++ name ++ " key before using it `mkey new " ++ name ++ "`\t" ++ err
       exitFailure
   where
     stripEncSuffix f =
@@ -123,69 +130,52 @@ optsInfo =
   info
     (commandParser <**> helper)
     ( fullDesc
-        <> progDesc "sign, verify, encrypt and decrypt files (post-quantum)"
+        <> progDesc "main utility from MCrypt project (post-quantum file )"
     )
 
 keyOpt :: Parser (Maybe String)
 keyOpt =
   optional $
     strOption
-      ( long "key"
-          <> short 'k'
-          <> metavar "KEY"
-          <> help "name of the keyset to use (default: \"main\")"
+      ( short 'k'
+      <> metavar "NAME"
+      <> value "master" 
+      <> help "name of the keypair to use" 
       )
 
 commandParser :: Parser Command
-commandParser = signParser <|> checkParser <|> encryptParser <|> decryptParser <|> versionParser
+commandParser = hsubparser
+  ( command "sign" (info signParser (progDesc "Sign a file"))
+ <> command "check" (info checkParser (progDesc "Verify a file signature"))
+ <> command "encrypt" (info encryptParser (progDesc "Encrypt a file"))
+ <> command "decrypt" (info decryptParser (progDesc "Decrypt a file"))
+ <> command "version" (info versionParser (progDesc "Print version"))
+  )
 
 signParser :: Parser Command
 signParser =
   Sign
-    <$> strOption
-      ( long "sign"
-          <> short 's'
-          <> metavar "FILE"
-          <> help "sign your file"
-      )
+    <$> argument str (metavar "FILE" <> help "File to sign")
     <*> keyOpt
 
 checkParser :: Parser Command
 checkParser =
   Check
-    <$> strOption
-      ( long "check"
-          <> short 'c'
-          <> metavar "FILE"
-          <> help "check signature"
-      )
+    <$> argument str (metavar "FILE" <> help "File to verify")
     <*> keyOpt
 
 versionParser :: Parser Command
-versionParser = flag' Version
-  ( long "version"
- <> short 'v'
- <> help "print version in major.minor.patch tags format"
-  )
+versionParser = Version <$> switch
+  (short 'a' <> help "Show component and supported protocol details")
 
 encryptParser :: Parser Command
 encryptParser =
   Encrypt
-    <$> strOption
-      ( long "encrypt"
-          <> short 'e'
-          <> metavar "FILE"
-          <> help "encrypt file"
-      )
+    <$> argument str (metavar "FILE" <> help "File to encrypt")
     <*> keyOpt
 
 decryptParser :: Parser Command
 decryptParser =
   Decrypt
-    <$> strOption
-      ( long "decrypt"
-          <> short 'd'
-          <> metavar "FILE"
-          <> help "decrypt file"
-      )
+    <$> argument str (metavar "FILE" <> help "File to decrypt")
     <*> keyOpt
