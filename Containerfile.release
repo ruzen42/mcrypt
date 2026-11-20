@@ -1,0 +1,62 @@
+# Build packages with BuildKit, for example:
+#   docker build -f Containerfile --target deb --output type=local,dest=dist/deb .
+# Targets: deb, rpm, apk, arch
+
+FROM haskell:9.10.3-slim-bookworm AS build
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential cmake ninja-build git libssl-dev pkg-config ca-certificates \
+ && rm -rf /var/lib/apt/lists/*
+ARG LIBOQS_TAG=0.16.0
+RUN git clone --depth 1 --branch ${LIBOQS_TAG} https://github.com/open-quantum-safe/liboqs.git /tmp/liboqs \
+ && cmake -G Ninja -S /tmp/liboqs -B /tmp/liboqs/build \
+      -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON \
+      -DCMAKE_INSTALL_PREFIX=/usr -DOQS_BUILD_ONLY_LIB=ON \
+      -DOQS_MINIMAL_BUILD=SIG_ml_dsa_65 \
+ && ninja -C /tmp/liboqs/build && ninja -C /tmp/liboqs/build install \
+ && rm -rf /tmp/liboqs
+ENV PKG_CONFIG_PATH=/usr/lib/pkgconfig:/usr/lib/x86_64-linux-gnu/pkgconfig
+WORKDIR /src
+COPY . .
+RUN cabal update && cabal build all \
+ && mkdir -p /stage/usr/bin /stage/usr/share/licenses/mrun-crypt \
+ && cp "$(cabal list-bin exe:mcrypt)" /stage/usr/bin/mcrypt \
+ && cp "$(cabal list-bin exe:mkey)" /stage/usr/bin/mkey \
+ && cp LICENSE /stage/usr/share/licenses/mrun-crypt/LICENSE
+
+FROM build AS deb-build
+RUN apt-get update && apt-get install -y --no-install-recommends dpkg-dev fakeroot
+RUN mkdir -p /pkg/DEBIAN \
+ && printf 'Package: mrun-crypt\nVersion: 2.0.1\nSection: utils\nPriority: optional\nArchitecture: amd64\nDepends: libc6, libgmp10, libssl3\nMaintainer: ruzen42 <ruzen@tuta.io>\nDescription: Post-quantum file signing and encryption tools\n' > /pkg/DEBIAN/control \
+ && cp -a /stage/. /pkg/ \
+ && dpkg-deb --build /pkg /mrun-crypt_2.0.1_amd64.deb
+FROM scratch AS deb
+COPY --from=deb-build /mrun-crypt_2.0.1_amd64.deb /
+
+FROM build AS rpm-build
+RUN apt-get update && apt-get install -y --no-install-recommends rpm
+RUN mkdir -p /root/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS} /pkgroot/usr/bin /pkgroot/usr/share/licenses/mrun-crypt \
+ && cp /stage/usr/bin/* /pkgroot/usr/bin/ \
+ && cp LICENSE /pkgroot/usr/share/licenses/mrun-crypt/LICENSE \
+ && printf 'Name: mrun-crypt\nVersion: 2.0.1\nRelease: 1\nSummary: Post-quantum file signing and encryption tools\nLicense: MIT\nBuildArch: x86_64\nRequires: liboqs, openssl-libs, gmp\n%%description\nPost-quantum file signing and encryption command line tools.\n%%install\nmkdir -p %%{buildroot}/usr/bin %%{buildroot}/usr/share/licenses/mrun-crypt\ncp /pkgroot/usr/bin/* %%{buildroot}/usr/bin/\ncp /pkgroot/usr/share/licenses/mrun-crypt/LICENSE %%{buildroot}/usr/share/licenses/mrun-crypt/\n%%files\n/usr/bin/mcrypt\n/usr/bin/mkey\n/usr/share/licenses/mrun-crypt/LICENSE\n' > /root/rpmbuild/SPECS/mrun-crypt.spec \
+ && rpmbuild -bb /root/rpmbuild/SPECS/mrun-crypt.spec
+FROM scratch AS rpm
+COPY --from=rpm-build /root/rpmbuild/RPMS/x86_64/*.rpm /
+
+FROM build AS apk-build
+RUN apt-get update && apt-get install -y --no-install-recommends apktool
+# Alpine packages are built in an Alpine container in order to use its APK tools.
+FROM alpine:3.21 AS apk
+RUN apk add --no-cache alpine-sdk
+COPY --from=build /stage /stage
+COPY LICENSE /LICENSE
+RUN mkdir -p /out && printf 'pkgname=mrun-crypt\npkgver=2.0.1\npkgrel=0\npkgdesc="Post-quantum file signing and encryption tools"\nurl="https://github.com/ruzen42/mcrypt"\narch="x86_64"\nlicense="MIT"\ndepend="liboqs openssl gmp"\n\npackage() {\n  install -Dm755 /stage/usr/bin/mcrypt "$pkgdir/usr/bin/mcrypt"\n  install -Dm755 /stage/usr/bin/mkey "$pkgdir/usr/bin/mkey"\n  install -Dm644 /LICENSE "$pkgdir/usr/share/licenses/mrun-crypt/LICENSE"\n}\n' > /APKBUILD \
+ && abuild-keygen -a -i -n && abuild -F -r -P /out
+FROM scratch AS apk-out
+COPY --from=apk /out/
+
+# Arch Linux uses makepkg, which must run on Arch. This target emits the PKGBUILD
+# plus prebuilt binaries as a source bundle; run makepkg -f on Arch to produce .pkg.tar.zst.
+FROM scratch AS arch
+COPY PKGBUILD /
+COPY --from=build /stage/usr/bin/ /usr/bin/
+COPY LICENSE /

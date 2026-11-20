@@ -6,11 +6,11 @@ import MCrypt.IO (getPrivate, getPublic)
 import MCrypt.Sig (sign, verify, loadSigFile, encryptFile, decryptFile)
 import qualified MCrypt.AES as AES
 import Options.Applicative
-import System.IO (hPutStrLn, stderr)
+import System.IO (hPutStrLn)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Base64 as B64
 import Data.Version (showVersion)
-import Paths_mcrypt_tools (version)
+import Paths_mcrypt (version)
 
 data Command
   = Sign    String (Maybe String)

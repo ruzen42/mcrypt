@@ -14,7 +14,6 @@ module MCrypt.IO
   ) where
 
 import Driver (Algorithm, KeyPair (..), PrivateKey (..), PublicKey (..), algorithmName)
-import Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BC
 import qualified Data.ByteString.Base64 as B64
@@ -64,7 +63,7 @@ save pair name = do
   savePublic (keyAlgorithm pair) (keyPublic pair) "example@mcrypt.com" dir
   savePrivate (keyPrivate pair) dir
 
-savePublic :: Algorithm -> PublicKey -> ByteString -> FilePath -> IO ()
+savePublic :: Algorithm -> PublicKey -> BS.ByteString -> FilePath -> IO ()
 savePublic algorithm (PublicKey pub) userData dir = do
   let key = B64.encode pub
   BS.writeFile (dir </> "public") (BC.pack ("mcrypt-" ++ algorithmName algorithm ++ " ") <> key <> " " <> userData)
@@ -82,8 +81,8 @@ getPublicRaw name = do
   if not exist
     then pure $ Left "key directory does not exist"
     else do
-      raw <- Prelude.readFile (dir </> "public")
-      pure $ Right raw 
+      raw <- BC.readFile (dir </> "public")
+      pure $ Right (BC.unpack raw)
  
 getPublic :: FilePath -> IO (Either String PublicKey)
 getPublic name = do
@@ -95,7 +94,7 @@ getPublic name = do
       raw <- BS.readFile (dir </> "public")
       pure $ PublicKey <$> parsePublic raw 
   where 
-    parsePublic :: ByteString -> Either String ByteString
+    parsePublic :: BS.ByteString -> Either String BS.ByteString
     parsePublic raw = case BC.words raw of
       (_ : dat : _) -> B64.decode dat
       [dat]         -> B64.decode dat
@@ -111,7 +110,7 @@ getPrivate name = do
       raw <- BS.readFile (dir </> "private")
       pure $ PrivateKey <$> parsePrivate raw 
   where 
-    parsePrivate :: ByteString -> Either String ByteString
+    parsePrivate :: BS.ByteString -> Either String BS.ByteString
     parsePrivate raw = 
       let ls = BC.lines raw
           content = BS.concat $ filter (\l -> not (BC.isPrefixOf "---" l)) ls

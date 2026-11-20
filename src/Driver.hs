@@ -19,8 +19,7 @@ module Driver
   , printKey
   ) where
  
-import Control.Exception (Exception, throwIO)
-import Control.Monad (when)
+import Control.Exception (throwIO)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Unsafe as BSU
 import Foreign

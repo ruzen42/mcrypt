@@ -1,0 +1,151 @@
+evaluation warning: stdenv.isLinux is deprecated, use stdenv.hostPlatform.isLinux instead
+mcrypt> build (lib + exe) with ghc-9.10.3
+Preprocessing library for mcrypt-2.0.1...
+Building library for mcrypt-2.0.1...
+[2 of 6] Compiling MCrypt.AES
+/srv/users/ruzen42/src/mcrypt/src/MCrypt/AES.hs:68:3: error: [GHC-88464]
+    Variable not in scope:
+      withBinaryFile :: FilePath -> IOMode -> (t12 -> IO ()) -> IO ()
+   |
+68 |   withBinaryFile srcPath ReadMode $ \hIn -> do
+   |   ^^^^^^^^^^^^^^
+
+/srv/users/ruzen42/src/mcrypt/src/MCrypt/AES.hs:69:35: error: [GHC-88464]
+    Variable not in scope: hFileSize :: t12 -> IO a5
+   |
+69 |     totalSize <- fromIntegral <$> hFileSize hIn
+   |                                   ^^^^^^^^^
+
+/srv/users/ruzen42/src/mcrypt/src/MCrypt/AES.hs:70:5: error: [GHC-88464]
+    Variable not in scope:
+      withBinaryFile :: FilePath -> IOMode -> (t10 -> t11) -> IO a4
+   |
+70 |     withBinaryFile dstPath WriteMode $ \hOut ->
+   |     ^^^^^^^^^^^^^^
+
+/srv/users/ruzen42/src/mcrypt/src/MCrypt/AES.hs:71:7: error: [GHC-88464]
+    Variable not in scope: hSetFileSize :: t10 -> Integer -> t11
+   |
+71 |       hSetFileSize hOut (fromIntegral (16 + totalSize) :: Integer)
+   |       ^^^^^^^^^^^^
+
+/srv/users/ruzen42/src/mcrypt/src/MCrypt/AES.hs:79:7: error: [GHC-88464]
+    Variable not in scope:
+      withBinaryFile :: t16 -> IOMode -> (Handle -> t4) -> b
+   |
+79 |       withBinaryFile src ReadMode $ \hIn ->
+   |       ^^^^^^^^^^^^^^
+
+/srv/users/ruzen42/src/mcrypt/src/MCrypt/AES.hs:80:9: error: [GHC-88464]
+    Variable not in scope:
+      withBinaryFile :: t17 -> IOMode -> (Handle -> IO ()) -> t4
+   |
+80 |         withBinaryFile dst ReadWriteMode $ \hOut -> do
+   |         ^^^^^^^^^^^^^^
+
+/srv/users/ruzen42/src/mcrypt/src/MCrypt/AES.hs:81:11: error: [GHC-88464]
+    Variable not in scope: hSeek :: Handle -> t2 -> t3 -> IO a1
+   |
+81 |           hSeek hIn AbsoluteSeek (fromIntegral offset)
+   |           ^^^^^
+
+/srv/users/ruzen42/src/mcrypt/src/MCrypt/AES.hs:81:21: error: [GHC-88464]
+    Data constructor not in scope: AbsoluteSeek
+   |
+81 |           hSeek hIn AbsoluteSeek (fromIntegral offset)
+   |                     ^^^^^^^^^^^^
+
+/srv/users/ruzen42/src/mcrypt/src/MCrypt/AES.hs:86:11: error: [GHC-88464]
+    Variable not in scope: hSeek :: Handle -> t0 -> t1 -> IO a0
+   |
+86 |           hSeek hOut AbsoluteSeek (fromIntegral (16 + offset))
+   |           ^^^^^
+
+/srv/users/ruzen42/src/mcrypt/src/MCrypt/AES.hs:86:22: error: [GHC-88464]
+    Data constructor not in scope: AbsoluteSeek
+   |
+86 |           hSeek hOut AbsoluteSeek (fromIntegral (16 + offset))
+   |                      ^^^^^^^^^^^^
+
+/srv/users/ruzen42/src/mcrypt/src/MCrypt/AES.hs:93:14: error: [GHC-88464]
+    Variable not in scope:
+      withBinaryFile
+        :: FilePath -> IOMode -> (Handle -> IO ByteString) -> IO ByteString
+   |
+93 |   nonceBS <- withBinaryFile srcPath ReadMode $ \hIn -> BS.hGet hIn 16
+   |              ^^^^^^^^^^^^^^
+
+/srv/users/ruzen42/src/mcrypt/src/MCrypt/AES.hs:94:3: error: [GHC-88464]
+    Variable not in scope:
+      withBinaryFile :: FilePath -> IOMode -> (t15 -> IO ()) -> IO ()
+   |
+94 |   withBinaryFile srcPath ReadMode $ \hIn -> do
+   |   ^^^^^^^^^^^^^^
+
+/srv/users/ruzen42/src/mcrypt/src/MCrypt/AES.hs:95:34: error: [GHC-88464]
+    Variable not in scope: hFileSize :: t15 -> IO a7
+   |
+95 |     fullSize <- fromIntegral <$> hFileSize hIn
+   |                                  ^^^^^^^^^
+
+/srv/users/ruzen42/src/mcrypt/src/MCrypt/AES.hs:97:5: error: [GHC-88464]
+    Variable not in scope:
+      withBinaryFile :: FilePath -> IOMode -> (t13 -> t14) -> IO a6
+   |
+97 |     withBinaryFile dstPath WriteMode $ \hOut ->
+   |     ^^^^^^^^^^^^^^
+
+/srv/users/ruzen42/src/mcrypt/src/MCrypt/AES.hs:98:7: error: [GHC-88464]
+    Variable not in scope: hSetFileSize :: t13 -> Integer -> t14
+   |
+98 |       hSetFileSize hOut (fromIntegral totalSize :: Integer)
+   |       ^^^^^^^^^^^^
+
+/srv/users/ruzen42/src/mcrypt/src/MCrypt/AES.hs:103:7: error: [GHC-88464]
+    Variable not in scope:
+      withBinaryFile :: t16 -> IOMode -> (Handle -> t9) -> b
+    |
+103 |       withBinaryFile src ReadMode $ \hIn ->
+    |       ^^^^^^^^^^^^^^
+
+/srv/users/ruzen42/src/mcrypt/src/MCrypt/AES.hs:104:9: error: [GHC-88464]
+    Variable not in scope:
+      withBinaryFile :: t17 -> IOMode -> (Handle -> IO ()) -> t9
+    |
+104 |         withBinaryFile dst ReadWriteMode $ \hOut -> do
+    |         ^^^^^^^^^^^^^^
+
+/srv/users/ruzen42/src/mcrypt/src/MCrypt/AES.hs:105:11: error: [GHC-88464]
+    Variable not in scope: hSeek :: Handle -> t7 -> t8 -> IO a3
+    |
+105 |           hSeek hIn AbsoluteSeek (fromIntegral (16 + offset))
+    |           ^^^^^
+
+/srv/users/ruzen42/src/mcrypt/src/MCrypt/AES.hs:105:21: error: [GHC-88464]
+    Data constructor not in scope: AbsoluteSeek
+    |
+105 |           hSeek hIn AbsoluteSeek (fromIntegral (16 + offset))
+    |                     ^^^^^^^^^^^^
+
+/srv/users/ruzen42/src/mcrypt/src/MCrypt/AES.hs:110:11: error: [GHC-88464]
+    Variable not in scope: hSeek :: Handle -> t5 -> t6 -> IO a2
+    |
+110 |           hSeek hOut AbsoluteSeek (fromIntegral offset)
+    |           ^^^^^
+
+/srv/users/ruzen42/src/mcrypt/src/MCrypt/AES.hs:110:22: error: [GHC-88464]
+    Data constructor not in scope: AbsoluteSeek
+    |
+110 |           hSeek hOut AbsoluteSeek (fromIntegral offset)
+    |                      ^^^^^^^^^^^^
+
+
+Error: [S-7282]
+       Stack failed to execute the build plan.
+       
+       While executing the build plan, Stack encountered the error:
+       
+       [S-7011]
+       While building package mcrypt-2.0.1 (scroll up to its section to see the error) using:
+       /srv/users/ruzen42/.stack/setup-exe-cache/x86_64-linux-nix/Cabal-simple_O_vy6YIf_3.12.1.0_ghc-9.10.3 --verbose=1 --builddir=.stack-work/dist/x86_64-linux-nix/ghc-9.10.3 build lib:mcrypt exe:mcrypt exe:mkey --ghc-options ""
+       Process exited with code: ExitFailure 1 

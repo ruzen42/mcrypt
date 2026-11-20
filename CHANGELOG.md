@@ -1,4 +1,4 @@
-# Changelog for `mcrypt-tools`
+# Changelog for `mcrypt`
 
 All notable changes to this project will be documented in this file.
 

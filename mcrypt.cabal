@@ -97,6 +97,7 @@ executable mkey
     , mcrypt
     , optparse-applicative
     , relude
+    , text
   mixins:
       base hiding (Prelude)
     , relude (Relude as Prelude)

@@ -16,25 +16,20 @@ import Crypto.Cipher.Types (BlockCipher(..), Cipher(..), IV, makeIV)
 import Crypto.Random (getRandomBytes)
 import Crypto.Error (CryptoFailable(..))
 import Control.Concurrent.Async (mapConcurrently_)
-import Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
 import Data.Bits (shiftR)
-import Data.Word (Word64)
-import System.IO
-  ( IOMode(..), withBinaryFile, hSeek, SeekMode(..)
-  , hFileSize, hSetFileSize
-  )
+import qualified System.IO as IO
 
-newtype Key = Key ByteString
+newtype Key = Key BS.ByteString
   deriving (Eq, Show)
 
 createAESKey :: IO Key
 createAESKey = Key <$> getRandomBytes 32
 
-keyBytes :: Key -> ByteString
+keyBytes :: Key -> BS.ByteString
 keyBytes (Key bs) = bs
 
-keyFromBytes :: ByteString -> Either String Key
+keyFromBytes :: BS.ByteString -> Either String Key
 keyFromBytes bs
   | BS.length bs == 32 = Right (Key bs)
   | otherwise = Left "AES-256 key must be 32 bytes"
@@ -42,7 +37,7 @@ keyFromBytes bs
 chunkSize :: Word64
 chunkSize = 64 * 1024 * 1024 -- 64 MiB
 
-addCounter :: ByteString -> Word64 -> IV AES256
+addCounter :: BS.ByteString -> Word64 -> IV AES256
 addCounter nonceBS blocks =
   let (prefix, counterBS) = BS.splitAt 8 nonceBS
       counterVal = bsToWord64BE counterBS
@@ -52,11 +47,13 @@ addCounter nonceBS blocks =
        Just iv -> iv
        Nothing -> error "internal error: bad nonce length"
 
-bsToWord64BE :: ByteString -> Word64
+bsToWord64BE :: BS.ByteString -> Word64
 bsToWord64BE = BS.foldl' (\acc w -> (acc `shiftL'` 8) + fromIntegral w) 0
-  where shiftL' x n = x * (2 ^ n)
+  where
+    shiftL' :: Word64 -> Int -> Word64
+    shiftL' x n = x * (2 ^ n)
 
-word64ToBSBE :: Word64 -> ByteString
+word64ToBSBE :: Word64 -> BS.ByteString
 word64ToBSBE w = BS.pack [ fromIntegral (w `shiftR` (i * 8)) | i <- [7,6..0] ]
 
 initCipher :: Key -> AES256
@@ -69,10 +66,10 @@ encryptFile :: Key -> FilePath -> FilePath -> IO ()
 encryptFile key srcPath dstPath = do
   let cipher = initCipher key
   nonceBS <- getRandomBytes 16
-  withBinaryFile srcPath ReadMode $ \hIn -> do
-    totalSize <- fromIntegral <$> hFileSize hIn
-    withBinaryFile dstPath WriteMode $ \hOut ->
-      hSetFileSize hOut (fromIntegral (16 + totalSize) :: Integer)
+  IO.withBinaryFile srcPath IO.ReadMode $ \hIn -> do
+    totalSize <- fromIntegral <$> IO.hFileSize hIn
+    IO.withBinaryFile dstPath IO.WriteMode $ \hOut ->
+      IO.hSetFileSize hOut (fromIntegral (16 + totalSize) :: Integer)
     BS.writeFile dstPath nonceBS  
     let offsets = takeWhileNonEmpty [0, chunkSize .. ] totalSize
     mapConcurrently_ (processChunk cipher nonceBS srcPath dstPath) offsets
@@ -80,36 +77,36 @@ encryptFile key srcPath dstPath = do
     takeWhileNonEmpty offs total = takeWhile (< total) offs
 
     processChunk cipher nonceBS src dst offset =
-      withBinaryFile src ReadMode $ \hIn ->
-        withBinaryFile dst ReadWriteMode $ \hOut -> do
-          hSeek hIn AbsoluteSeek (fromIntegral offset)
+      IO.withBinaryFile src IO.ReadMode $ \hIn ->
+        IO.withBinaryFile dst IO.ReadWriteMode $ \hOut -> do
+          IO.hSeek hIn IO.AbsoluteSeek (fromIntegral offset)
           chunkData <- BS.hGet hIn (fromIntegral chunkSize)
           let blocksOffset = offset `div` 16
               chunkIv = addCounter nonceBS blocksOffset
               out = ctrCombine cipher chunkIv chunkData
-          hSeek hOut AbsoluteSeek (fromIntegral (16 + offset))
+          IO.hSeek hOut IO.AbsoluteSeek (fromIntegral (16 + offset))
           BS.hPut hOut out
 
 -- CTR is symmetric
 decryptFile :: Key -> FilePath -> FilePath -> IO ()
 decryptFile key srcPath dstPath = do
   let cipher = initCipher key
-  nonceBS <- withBinaryFile srcPath ReadMode $ \hIn -> BS.hGet hIn 16
-  withBinaryFile srcPath ReadMode $ \hIn -> do
-    fullSize <- fromIntegral <$> hFileSize hIn
+  nonceBS <- IO.withBinaryFile srcPath IO.ReadMode $ \hIn -> BS.hGet hIn 16
+  IO.withBinaryFile srcPath IO.ReadMode $ \hIn -> do
+    fullSize <- fromIntegral <$> IO.hFileSize hIn
     let totalSize = fullSize - 16
-    withBinaryFile dstPath WriteMode $ \hOut ->
-      hSetFileSize hOut (fromIntegral totalSize :: Integer)
+    IO.withBinaryFile dstPath IO.WriteMode $ \hOut ->
+      IO.hSetFileSize hOut (fromIntegral totalSize :: Integer)
     let offsets = takeWhile (< totalSize) [0, chunkSize ..]
     mapConcurrently_ (processChunk cipher nonceBS srcPath dstPath) offsets
   where
     processChunk cipher nonceBS src dst offset =
-      withBinaryFile src ReadMode $ \hIn ->
-        withBinaryFile dst ReadWriteMode $ \hOut -> do
-          hSeek hIn AbsoluteSeek (fromIntegral (16 + offset))
+      IO.withBinaryFile src IO.ReadMode $ \hIn ->
+        IO.withBinaryFile dst IO.ReadWriteMode $ \hOut -> do
+          IO.hSeek hIn IO.AbsoluteSeek (fromIntegral (16 + offset))
           chunkData <- BS.hGet hIn (fromIntegral chunkSize)
           let blocksOffset = offset `div` 16
               chunkIv = addCounter nonceBS blocksOffset
               out = ctrCombine cipher chunkIv chunkData
-          hSeek hOut AbsoluteSeek (fromIntegral offset)
+          IO.hSeek hOut IO.AbsoluteSeek (fromIntegral offset)
           BS.hPut hOut out

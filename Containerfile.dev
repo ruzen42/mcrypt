@@ -1,0 +1,18 @@
+# Runtime image for binaries built and provided in ./dist/bin.
+# Build the binaries for Alpine (musl) and place mcrypt and mkey there first.
+FROM alpine:3.21
+
+RUN apk add --no-cache liboqs openssl gmp \
+ && addgroup -S mcrypt \
+ && adduser -S -G mcrypt -h /home/mcrypt mcrypt
+
+COPY dist/bin/mcrypt /usr/local/bin/mcrypt
+COPY dist/bin/mkey /usr/local/bin/mkey
+
+RUN chmod 0755 /usr/local/bin/mcrypt /usr/local/bin/mkey
+
+USER mcrypt
+WORKDIR /work
+
+ENTRYPOINT ["/usr/local/bin/mcrypt"]
+CMD ["--help"]

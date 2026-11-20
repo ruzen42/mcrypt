@@ -76,5 +76,6 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - mcrypt
+    - text
     - optparse-applicative
 
