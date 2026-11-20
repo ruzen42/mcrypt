@@ -1,3 +1,4 @@
+-- SPDX-License-Identifier: MIT
 module Main (main) where
 
 import Options.Applicative 

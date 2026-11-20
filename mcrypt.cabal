@@ -1,12 +1,12 @@
-cabal-version: 1.12
+cabal-version: 2.0
 
 -- This file has been generated from package.yaml by hpack version 0.39.1.
 --
 -- see: https://github.com/sol/hpack
 
-name:           mcrypt-tools
-version:        2.0.0-rc
-description:    Please see the README on GitHub at <https://github.com/ruzen42/mcrypt#readme>
+name:           mcrypt
+version:        2.0.1
+description:    Simple tools for sign with liboqs (PQ)
 category:       Cryptography
 homepage:       https://github.com/ruzen42/mcrypt#readme
 bug-reports:    https://github.com/ruzen42/mcrypt/issues
@@ -30,7 +30,9 @@ library
       Crypt.IO
       Crypt.Sig
   other-modules:
-      Paths_mcrypt_tools
+      Paths_mcrypt
+  autogen-modules:
+      Paths_mcrypt
   hs-source-dirs:
       src
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
@@ -43,7 +45,7 @@ library
   build-depends:
       aeson
     , async
-    , base >=4.7 && <5
+    , base
     , base64-bytestring
     , binary
     , blake3
@@ -53,33 +55,49 @@ library
     , filepath
     , ram
     , random
+    , relude
     , text
+  mixins:
+      base hiding (Prelude)
+    , relude (Relude as Prelude)
   default-language: Haskell2010
 
 executable mcrypt
   main-is: Main.hs
   other-modules:
-      Paths_mcrypt_tools
+      Paths_mcrypt
+  autogen-modules:
+      Paths_mcrypt
   hs-source-dirs:
       mcrypt
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >=4.7 && <5
+      base
     , base64-bytestring
     , bytestring
-    , mcrypt-tools
+    , mcrypt
     , optparse-applicative
+    , relude
+  mixins:
+      base hiding (Prelude)
+    , relude (Relude as Prelude)
   default-language: Haskell2010
 
 executable mkey
   main-is: Main.hs
   other-modules:
-      Paths_mcrypt_tools
+      Paths_mcrypt
+  autogen-modules:
+      Paths_mcrypt
   hs-source-dirs:
       mkey
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >=4.7 && <5
-    , mcrypt-tools
+      base
+    , mcrypt
     , optparse-applicative
+    , relude
+  mixins:
+      base hiding (Prelude)
+    , relude (Relude as Prelude)
   default-language: Haskell2010

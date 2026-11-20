@@ -1,3 +1,4 @@
+-- SPDX-License-Identifier: MIT
 {-# LANGUAGE OverloadedStrings #-}
 module Main (main) where
 

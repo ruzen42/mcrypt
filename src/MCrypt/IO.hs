@@ -1,5 +1,7 @@
+-- SPDX-License-Identifier: MIT
+
 {-# LANGUAGE OverloadedStrings #-}
-module Crypt.IO
+module MCrypt.IO
   ( save
   , getPublic 
   , getPublicRaw
@@ -11,7 +13,7 @@ module Crypt.IO
   , getKeyDir
   ) where
 
-import Crypt (PrivateKey (..), PublicKey (..))
+import Driver (PrivateKey (..), PublicKey (..))
 import Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BC

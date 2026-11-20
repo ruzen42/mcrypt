@@ -1,5 +1,7 @@
+-- SPDX-License-Identifier: MIT
+
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-module Crypt.AES
+module MCrypt.AES
   ( Key
   , createAESKey
   , keyFromBytes

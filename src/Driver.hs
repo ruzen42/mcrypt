@@ -1,7 +1,9 @@
+-- SPDX-License-Identifier: MIT
+
 {-# LANGUAGE ForeignFunctionInterface #-}
 {-# LANGUAGE OverloadedStrings        #-}
 
-module Crypt
+module Driver
   ( PublicKey (..)
   , PrivateKey (..)
   , AlgError (..)

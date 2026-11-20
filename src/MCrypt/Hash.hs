@@ -1,7 +1,9 @@
+-- SPDX-License-Identifier: MIT
+
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TypeApplications #-}
 
-module Crypt.Hash (hashFile) where
+module MCrypt.Hash (hashFile) where
 
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BL
