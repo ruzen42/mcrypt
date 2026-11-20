@@ -60,7 +60,7 @@ keyExist name = do
 save :: KeyPair -> FilePath -> IO ()
 save pair name = do
   dir <- getMCryptDir name
-  savePublic (keyAlgorithm pair) (keyPublic pair) "example@mcrypt.com" dir
+  savePublic (keyAlgorithm pair) (keyPublic pair) "\nexample@mcrypt.com" dir
   savePrivate (keyPrivate pair) dir
 
 savePublic :: Algorithm -> PublicKey -> BS.ByteString -> FilePath -> IO ()
@@ -71,7 +71,7 @@ savePublic algorithm (PublicKey pub) userData dir = do
 savePrivate :: PrivateKey -> FilePath -> IO ()
 savePrivate (PrivateKey prv) dir = do
   let key  = B64.encode prv
-      file = "-----BEGIN MCRYPT PRIVATE KEY-----\n" <> key <> "\n-----END MCRYPT PRIVATE KEY-----"
+      file = "-----BEGIN MCRYPT PRIVATE KEY-----\n" <> key <> "\n-----END MCRYPT PRIVATE KEY-----\n"
   BS.writeFile (dir </> "private") file
 
 getPublicRaw :: FilePath -> IO (Either String String)
