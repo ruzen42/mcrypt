@@ -13,7 +13,7 @@ module MCrypt.IO
   , getKeyDir
   ) where
 
-import Driver (PrivateKey (..), PublicKey (..))
+import Driver (Algorithm, KeyPair (..), PrivateKey (..), PublicKey (..), algorithmName)
 import Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BC
@@ -58,16 +58,16 @@ keyExist name = do
   dir <- getKeyDir name
   doesDirectoryExist dir
 
-save :: PublicKey -> PrivateKey -> FilePath -> IO ()
-save pub priv name = do
+save :: KeyPair -> FilePath -> IO ()
+save pair name = do
   dir <- getMCryptDir name
-  savePublic pub "example@mcrypt.com" dir
-  savePrivate priv dir
+  savePublic (keyAlgorithm pair) (keyPublic pair) "example@mcrypt.com" dir
+  savePrivate (keyPrivate pair) dir
 
-savePublic :: PublicKey -> ByteString -> FilePath -> IO ()
-savePublic (PublicKey pub) userData dir = do
+savePublic :: Algorithm -> PublicKey -> ByteString -> FilePath -> IO ()
+savePublic algorithm (PublicKey pub) userData dir = do
   let key = B64.encode pub
-  BS.writeFile (dir </> "public") ("mcrypt-dilithium3 " <> key <> " " <> userData)
+  BS.writeFile (dir </> "public") (BC.pack ("mcrypt-" ++ algorithmName algorithm ++ " ") <> key <> " " <> userData)
 
 savePrivate :: PrivateKey -> FilePath -> IO ()
 savePrivate (PrivateKey prv) dir = do

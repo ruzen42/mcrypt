@@ -1,6 +1,7 @@
 -- SPDX-License-Identifier: MIT
 
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE OverloadedStrings          #-}
 module MCrypt.AES
   ( Key
   , createAESKey
@@ -60,7 +61,7 @@ word64ToBSBE w = BS.pack [ fromIntegral (w `shiftR` (i * 8)) | i <- [7,6..0] ]
 
 initCipher :: Key -> AES256
 initCipher (Key keyBS) = case cipherInit keyBS of
-  CryptoFailed err -> error $ "failed to init cipher: " ++ show err
+  CryptoFailed err -> error $ "failed to init cipher: " <> show err
   CryptoPassed c    -> c
 
 -- File: [16 bytes nonce]

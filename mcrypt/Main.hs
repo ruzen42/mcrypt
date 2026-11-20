@@ -2,11 +2,10 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main (main) where
 
-import Crypt.IO (getPrivate, getPublic)
-import Crypt.Sig (sign, verify, loadSigFile, encryptFile, decryptFile)
-import qualified Crypt.AES as AES
+import MCrypt.IO (getPrivate, getPublic)
+import MCrypt.Sig (sign, verify, loadSigFile, encryptFile, decryptFile)
+import qualified MCrypt.AES as AES
 import Options.Applicative
-import System.Exit (exitFailure)
 import System.IO (hPutStrLn, stderr)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Base64 as B64

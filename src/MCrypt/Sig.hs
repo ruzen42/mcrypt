@@ -14,33 +14,31 @@ module MCrypt.Sig
 	, decryptFile
 	) where
 
-import Crypt.Hash (hashFile)
-import qualified Crypt as Dilithium
+import MCrypt.Hash (hashFile)
+import qualified Driver as Dilithium
 import Driver (PrivateKey, PublicKey, algName)
-import qualified Crypt.AES as AES
+import qualified MCrypt.AES as AES
 import Data.Aeson (FromJSON, ToJSON, encode, decode)
 import Data.ByteString (ByteString)
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Lazy as BSL
 import GHC.Generics (Generic)
-import Data.Text (Text)
-import qualified Data.Text.Encoding as TE
 
 data SigFile = SigFile
 	{ sigHashAlg :: String        -- "BLAKE3"
 	, sigSignAlg :: String        -- from Crypt.algName
-	, sigDigest  :: Text          -- Base64(digest)
-	, sigBytes   :: Text          -- Base64(signature)
+	, sigDigest  :: String        -- Base64(digest)
+	, sigBytes   :: String        -- Base64(signature)
 	} deriving (Show, Generic)
 
 instance ToJSON SigFile
 instance FromJSON SigFile
 
-b64 :: ByteString -> Text
-b64 = TE.decodeUtf8 . B64.encode
+b64 :: ByteString -> String
+b64 = decodeUtf8 . B64.encode
 
-unb64 :: Text -> Either String ByteString
-unb64 = B64.decode . TE.encodeUtf8
+unb64 :: String -> Either String ByteString
+unb64 = B64.decode . encodeUtf8
 
 signFile :: PrivateKey -> FilePath -> IO SigFile
 signFile priv path = do

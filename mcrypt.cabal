@@ -24,11 +24,11 @@ source-repository head
 
 library
   exposed-modules:
-      Crypt
-      Crypt.AES
-      Crypt.Hash
-      Crypt.IO
-      Crypt.Sig
+      Driver
+      MCrypt.AES
+      MCrypt.Hash
+      MCrypt.IO
+      MCrypt.Sig
   other-modules:
       Paths_mcrypt
   autogen-modules:

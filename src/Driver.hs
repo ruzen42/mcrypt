@@ -6,11 +6,14 @@
 module Driver
   ( PublicKey (..)
   , PrivateKey (..)
+  , Algorithm (..)
+  , KeyPair (..)
   , AlgError (..)
   , algName
   , publicKeyLength
   , secretKeyLength
   , newKeypair
+  , algorithmName
   , sign
   , verify
   , printKey
@@ -22,10 +25,23 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.Unsafe as BSU
 import Foreign
 import Foreign.C.Types
+import Prelude hiding (All)
  
 -- name of the fixed signature algorithm (informational  for inclusion in signature file headers)
 algName :: String
 algName = "OQS_SIG_alg_ml_dsa_65"
+
+data Algorithm = MlDsa65
+  deriving (Eq, Show, Read, Enum, Bounded)
+
+algorithmName :: Algorithm -> String
+algorithmName MlDsa65 = "ml-dsa-65"
+
+data KeyPair = KeyPair
+  { keyAlgorithm :: Algorithm
+  , keyPublic :: PublicKey
+  , keyPrivate :: PrivateKey
+  } deriving (Eq, Show)
 
 printKey :: PublicKey -> IO ()
 printKey key = BS.putStr $ (unPublic key) <> "\n"
@@ -37,9 +53,7 @@ newtype PrivateKey = PrivateKey { unPrivate :: BS.ByteString }
   deriving (Eq, Show)
  
 newtype AlgError = AlgError String
-
-instance Show AlgError where
-  show (AlgError s) = "AlgError: " ++ s
+  deriving (Show)
 
 instance Exception AlgError
  
@@ -87,8 +101,8 @@ requireAlg n =
         ++ " support (rebuild liboqs with -DOQS_ENABLE_SIG_dilithium_3=ON)"
  
 -- generate a neww Dilithium3 keypair
-newKeypair :: IO (PublicKey, PrivateKey)
-newKeypair = do
+newKeypair :: Algorithm -> IO KeyPair
+newKeypair algorithm = do
   pubLen <- publicKeyLength
   secLen <- secretKeyLength
   requireAlg pubLen
@@ -99,7 +113,11 @@ newKeypair = do
       when (rc /= 0) $ throwIO (AlgError "OQS_SIG_keypair failed")
       pub <- BS.packCStringLen (castPtr pubPtr, pubLen)
       sec <- BS.packCStringLen (castPtr secPtr, secLen)
-      pure (PublicKey pub, PrivateKey sec)
+      pure KeyPair
+        { keyAlgorithm = algorithm
+        , keyPublic = PublicKey pub
+        , keyPrivate = PrivateKey sec
+        }
  
 -- sign a message (in practice: a BLAKE3 digest, please see 'Crypt.Hash' modull) with a D3 private key
 sign :: PrivateKey -> BS.ByteString -> IO BS.ByteString

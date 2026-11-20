@@ -1,95 +1,60 @@
 -- SPDX-License-Identifier: MIT
 module Main (main) where
 
-import Options.Applicative 
-import Crypt.IO (save, getPublicRaw, getKeyDir, getAllKeys, removeKeys)
-import Crypt (newKeypair)
+import Driver (Algorithm (..), algorithmName, newKeypair)
+import MCrypt.IO (getAllKeys, getKeyDir, getPublicRaw, removeKeys, save)
 import Data.Version (showVersion)
+import Options.Applicative
 import Paths_mcrypt_tools (version)
 
 data Command
-    = New String
-    | Get String
-    | List
-    | Version
-    | Delete String
+  = New String Algorithm
+  | Get String
+  | Delete String
+  | List
+  | Version
 
 main :: IO ()
 main = do
-    act <- execParser optsInfo
-    case act of
-        New name -> do
-            (pub, prv) <- newKeypair 
-            save pub prv name
-            putStrLn $ "created key \"" ++ name ++ "\""
-        Get name -> do
-            pub <- getPublicRaw name
-            case pub of
-              Right key -> putStrLn key
-              Left err  -> putStrLn err
-        List -> do
-            raw  <- getAllKeys
-            keys <- mapM getKeyDir raw
-            mapM_ putStrLn keys
-
-        Delete name -> removeKeys name 
-        Version     -> 
-          putStrLn $ showVersion version
+  action <- execParser optsInfo
+  case action of
+    New name algorithm -> do
+      pair <- newKeypair algorithm
+      save pair name
+      putStrLn $ "created " ++ algorithmName algorithm ++ " key \"" ++ name ++ "\""
+    Get name -> do
+      result <- getPublicRaw name
+      either putStrLn putStrLn result
+    List -> getAllKeys >>= mapM getKeyDir >>= mapM_ putStrLn
+    Delete name -> removeKeys name
+    Version -> putStrLn $ showVersion version
 
 optsInfo :: ParserInfo Command
-optsInfo = info
-        (commandParser <**> helper)
-        ( fullDesc
-       <> progDesc "simple cryptokeys generator"
-        )
+optsInfo = info (commandParser <**> helper)
+  (fullDesc <> progDesc "mcrypt project key management tool")
 
 commandParser :: Parser Command
-commandParser =
-        newParser
-    <|> getParser
-    <|> listParser
-    <|> deleteParser
-    <|> versionParser
-
-versionParser :: Parser Command
-versionParser = flag' Version
-  ( long "version"
- <> short 'v'
- <> help "print version in major.minor.patch tags format"
+commandParser = hsubparser
+  ( command "new" (info newCmd (progDesc "Generate a new key"))
+ <> command "get" (info getCmd (progDesc "Get a public key"))
+ <> command "delete" (info deleteCmd (progDesc "Delete a key folder"))
+ <> command "list" (info (pure List) (progDesc "List available keys"))
+ <> command "version" (info (pure Version) (progDesc "Print version"))
   )
 
-newParser :: Parser Command
-newParser =
-    New <$> strOption
-        ( long "new"
-       <> short 'n' 
-       <> metavar "NAME"
-       <> help "generate a new key pair"
-        )
+newCmd :: Parser Command
+newCmd = New
+  <$> argument str (metavar "NAME" <> value "master" <> showDefault <> help "Key name")
+  <*> option (eitherReader parseAlgorithm)
+      (long "algorithm" <> short 'a' <> metavar "ALGORITHM" <> value MlDsa65
+       <> showDefaultWith algorithmName <> help "Algorithm (ml-dsa-65)")
 
-getParser :: Parser Command
-getParser =
-    Get <$> strOption
-        ( long "get"
-       <> metavar "NAME"
-       <> short 'g' 
-       <> help "get public key"
-        )
+parseAlgorithm :: String -> Either String Algorithm
+parseAlgorithm "ml-dsa-65" = Right MlDsa65
+parseAlgorithm other = Left $ "unsupported algorithm: " ++ other ++ " (supported: ml-dsa-65)"
 
-listParser :: Parser Command
-listParser =
-    flag' List
-        ( long "list"
-       <> short 'l' 
-       <> help "list keys"
-        )
+getCmd :: Parser Command
+getCmd = Get <$> argument str (metavar "NAME" <> help "Key name")
 
-deleteParser :: Parser Command
-deleteParser =
-    Delete <$> strOption
-        ( long "delete"
-       <> metavar "NAME"
-       <> short 'd' 
-       <> help "Delete a key"
-        )
-
+deleteCmd :: Parser Command
+deleteCmd = Delete <$> argument str (metavar "NAME" <> help "Key name to delete")
